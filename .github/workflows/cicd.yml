@@ -74,7 +74,9 @@ jobs:
 
           staging_branch=false
           master_branch=false
+          beta_branch=false
           [[ "${GITHUB_REF}" == "refs/heads/staging" ]] && staging_branch=true
+          [[ "${GITHUB_REF}" == "refs/heads/beta" ]] && beta_branch=true
           [[ "${GITHUB_REF}" == "refs/heads/master" ]] && master_branch=true
 
           build_backend=false
@@ -83,7 +85,7 @@ jobs:
           [[ "${{ inputs.deploy }}" == "true" || "${{ inputs.build_frontend }}" == "true" || "$frontend_changed" == "true" || "$chart_changed" == "true" ]] && build_frontend=true
 
           deploy=false
-          if { [[ "$staging_branch" == "true" || "$master_branch" == "true" ]] && { [[ "$build_backend" == "true" || "$build_frontend" == "true" ]]; }; }; then
+          if { [[ "$staging_branch" == "true" || "$master_branch" == "true" || "$beta_branch" == "true" ]] && { [[ "$build_backend" == "true" || "$build_frontend" == "true" ]]; }; }; then
             deploy=true
           fi
 
@@ -91,6 +93,7 @@ jobs:
             echo "build_backend=$build_backend"
             echo "build_frontend=$build_frontend"
             echo "deploy=$deploy"
+            echo "beta_branch=$beta_branch"
             echo "staging_branch=$staging_branch"
             echo "master_branch=$master_branch"
           } >> $GITHUB_OUTPUT
@@ -99,6 +102,7 @@ jobs:
           echo "build_backend=$build_backend"
           echo "build_frontend=$build_frontend"
           echo "deploy=$deploy"
+          echo "beta_branch=$beta_branch"
           echo "staging_branch=$staging_branch"
           echo "master_branch=$master_branch"
           echo "::endgroup::"
@@ -166,6 +170,10 @@ jobs:
         if: ${{ steps.vars.outputs.build_frontend == 'true' && steps.vars.outputs.staging_branch == 'true' }}
         working-directory: frontend
         run: pnpm buildStaging
+      - name: Build frontend (beta)
+        if: ${{ steps.vars.outputs.build_frontend == 'true' && steps.vars.outputs.beta_branch == 'true' }}
+        working-directory: frontend
+        run: pnpm buildBeta
       # </editor-fold>
 
       # <editor-fold desc="Deploy">

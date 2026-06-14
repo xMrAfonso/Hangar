@@ -6,6 +6,7 @@
   "scripts": {
     "build": "nuxt build --dotenv .config/prod.env",
     "buildStaging": "nuxt build --dotenv .config/staging.env",
+    "buildBeta": "nuxt build --dotenv .config/beta.env",
     "buildLocal": "nuxt build --dotenv .config/local.env",
     "dev": "nuxt dev --port 3333 --dotenv .config/local.env",
     "devStaging": "nuxt dev --port 3333 --dotenv .config/localStaging.env",
