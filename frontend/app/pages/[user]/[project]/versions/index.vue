@@ -27,8 +27,8 @@ const requestParams = computed(() => {
   return {
     limit,
     offset: page.value * limit,
-    channel: filter.channels.length ? filter.channels : undefined,
-    platform: filter.platforms.length ? filter.platforms : undefined,
+    channel: filter.channels.length > 0 ? filter.channels : undefined,
+    platform: filter.platforms.length > 0 ? filter.platforms : undefined,
   };
 });
 
@@ -36,7 +36,12 @@ const { channels } = useProjectChannels(() => route.params.project);
 const { versions, versionsStatus } = useProjectVersions(
   () => ({
     project: route.params.project,
-    data: { ...requestParams.value, includeHiddenChannels: true },
+    data: {
+      ...requestParams.value,
+      channel: requestParams.value.channel ?? [],
+      platform: requestParams.value.platform ?? [],
+      includeHiddenChannels: true,
+    },
   }),
   router
 );
@@ -176,7 +181,7 @@ function getVisibilityTitle(visibility: Visibility) {
         <template #header>
           <div class="flex items-center gap-2 px-4 pt-3.5 pb-1">
             <h2 class="flex-grow">{{ i18n.t("version.channels") }}</h2>
-            <Tooltip v-if="filter.channels.length">
+            <Tooltip v-if="filter.channels.length > 0">
               <button
                 class="flex items-center rounded-full border border-transparent p-1 transition-all duration-250 hover:border-red-600 hover:bg-red-900/50"
                 @click="filter.channels = []"
@@ -205,7 +210,7 @@ function getVisibilityTitle(visibility: Visibility) {
         <template #header>
           <div class="flex items-center gap-2 px-4 pt-3.5 pb-1">
             <h2 class="flex-grow">{{ i18n.t("version.platforms") }}</h2>
-            <Tooltip v-if="filter.platforms.length">
+            <Tooltip v-if="filter.platforms.length > 0">
               <button
                 class="flex items-center rounded-full border border-transparent p-1 transition-all duration-250 hover:border-red-600 hover:bg-red-900/50"
                 @click="filter.platforms = []"

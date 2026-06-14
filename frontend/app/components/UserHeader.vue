@@ -19,10 +19,10 @@ const canEditCurrentUser = computed<boolean>(() => {
 });
 
 const editProfileRoute = computed(() => {
-  if (!props.viewingUser || props.viewingUser.isOrganization) return undefined;
+  if (!props.viewingUser || props.viewingUser.isOrganization) return;
   if (isCurrentUser.value) return "/auth/settings/profile";
   if (hasPerms(NamedPermission.EditAllUserSettings)) return `/admin/user/${props.viewingUser.name}`;
-  return undefined;
+  return;
 });
 
 const hasOrganizationRole = computed(() => props.viewingUser?.roles?.some((roleId) => getRole(roleId)?.title?.toLowerCase() === "organization"));

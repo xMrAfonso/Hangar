@@ -5,7 +5,7 @@ const i18n = useI18n();
 const router = useRouter();
 
 const trustedHosts = useLocalStorage("trustedHosts", [] as string[]);
-// eslint-disable-next-line vue/return-in-computed-property
+ 
 const host = computed<string | undefined>(() => {
   if (remoteUrl) {
     try {

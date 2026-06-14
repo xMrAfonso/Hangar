@@ -2,15 +2,23 @@
 import type { ValidationRule } from "@vuelidate/core";
 import type { PlatformVersion } from "#shared/types/backend";
 
-const props = defineProps<{
-  versions: PlatformVersion[];
-  modelValue?: string[];
-  open: boolean;
-  showAllVersions: boolean;
-  versionSearchQuery?: string;
-  rules?: ValidationRule<string | undefined>[];
-  col?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    versions: PlatformVersion[];
+    modelValue?: string[];
+    open: boolean;
+    showAllVersions?: boolean;
+    versionSearchQuery?: string;
+    rules?: ValidationRule<string | undefined>[];
+    col?: boolean;
+  }>(),
+  {
+    modelValue: undefined,
+    rules: undefined,
+    showAllVersions: false,
+    versionSearchQuery: undefined,
+  }
+);
 
 const emit = defineEmits<{
   (e: "update:modelValue", selected?: string[]): void;

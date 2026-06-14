@@ -23,7 +23,7 @@ const sorters = [
 ];
 
 const toArray = (input: LocationQueryValue | LocationQueryValue[] | undefined): string[] =>
-  Array.isArray(input) ? (input as string[]) : input ? [input!] : [];
+  Array.isArray(input) ? (input as string[]) : (input ? [input!] : []);
 const showAllVersions = ref(false);
 const filters = ref({
   versions: toArray(route.query.version),
@@ -267,8 +267,9 @@ onMounted(() => {
                       close();
                     }
                   "
-                  v-html="sorter.label"
-                />
+                >
+                  <span v-html="sorter.label" />
+                </DropdownItem>
                 <!-- eslint-enable vue/no-v-html -->
               </div>
             </template>

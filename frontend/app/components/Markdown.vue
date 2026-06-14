@@ -10,6 +10,7 @@ const props = withDefaults(
   }
 );
 const route = useRoute();
+const isProjectRoute = computed(() => "project" in route.params);
 
 const renderedMarkdown = computed(() => {
   const { html, headings } = parseMarkdown(props.raw);
@@ -33,7 +34,7 @@ watchPostEffect(async () => {
 
 <template>
   <div
-    v-if="!inline && !route.params.project && (renderedMarkdown.headings?.length || 0) > 0"
+    v-if="!inline && !isProjectRoute && (renderedMarkdown.headings?.length || 0) > 0"
     class="flex items-center border-b px-4 py-3 dark:border-gray-800"
   >
     <DropdownButton :button-arrow="false" button-size="medium" button-type="transparent" placement="bottom-start">

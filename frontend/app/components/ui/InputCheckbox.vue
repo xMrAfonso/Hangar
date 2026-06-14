@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T">
-import { computed, useAttrs } from "vue";
+import { computed } from "vue";
 
 const emit = defineEmits<{
   (e: "update:modelValue", value?: T): void;
@@ -31,7 +31,8 @@ const { v } = useValidation(props.label, undefined, internalVal);
 </script>
 
 <template>
-  <label class="w-full flex items-center select-none relative" :class="{
+  <label
+class="w-full flex items-center select-none relative" :class="{
            'cursor-pointer': !disabled,
          }">
     <input

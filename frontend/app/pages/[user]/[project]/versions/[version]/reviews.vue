@@ -43,7 +43,7 @@ const isCurrentReviewOpen = computed<boolean>(() => {
 });
 
 const currentReviewLastAction = computed<ReviewAction>(() => {
-  const lastMsg = currentUserReview.value!.messages[currentUserReview.value!.messages.length - 1];
+  const lastMsg = currentUserReview.value!.messages.at(-1);
   return lastMsg!.action;
 });
 
