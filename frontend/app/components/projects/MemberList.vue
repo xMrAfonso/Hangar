@@ -55,7 +55,7 @@ const saving = ref<boolean>(false);
 const search = ref<string>("");
 const addErrors = ref<string[]>([]);
 const result = ref<string[]>([]);
-const selectedRole = ref<RoleData | undefined>([...roles].sort((role1, role2) => (role2.rank ?? Number.NEGATIVE_INFINITY) - (role1.rank ?? Number.NEGATIVE_INFINITY))[0]);
+const selectedRole = ref<RoleData | undefined>(roles.toSorted((role1, role2) => (role2.rank ?? Number.NEGATIVE_INFINITY) - (role1.rank ?? Number.NEGATIVE_INFINITY))[0]);
 const memberViewMode = ref<"list" | "grid">("list");
 
 watch(search, () => {
