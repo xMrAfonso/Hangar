@@ -8,6 +8,17 @@ html {
   font-weight: 500;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: var(--gray-600);
+  opacity: 1;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--charcoal-200);
+}
+
 .w-fit {
   width: fit-content;
 }

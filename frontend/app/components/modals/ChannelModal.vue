@@ -99,29 +99,27 @@ reset();
             <label class="text-sm font-semibold" for="channel-name">{{ i18n.t("channel.modal.name") }}</label>
             <span class="text-xs text-gray">{{ name.length }}/{{ useBackendData.validations.project.channels.max }}</span>
           </div>
-          <input
+          <InputText
             id="channel-name"
             v-model.trim="name"
-            class="h-10.5 w-full rounded-lg border border-transparent bg-gray-100 px-3 py-2 outline-none transition-all duration-200 hover:border-gray-300 focus:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-700 dark:focus:border-gray-600"
-            :class="{ '!border-red-400': nameError }"
+            class="[&>label]:!h-10.5 [&>label]:!py-0"
             name="name"
             :maxlength="useBackendData.validations.project.channels.max"
-            type="text"
+            :error-messages="nameError ? [nameError] : []"
+            no-error-tooltip
           />
-          <p v-if="nameError" class="mt-1 text-xs text-red-400">{{ nameError }}</p>
         </div>
         <div>
           <div class="mb-1.5 flex items-center justify-between gap-2">
             <label class="text-sm font-semibold" for="channel-description">{{ i18n.t("channel.modal.description") }}</label>
             <span class="text-xs text-gray">{{ description.length }}/50</span>
           </div>
-          <input
+          <InputText
             id="channel-description"
             v-model.trim="description"
-            class="h-10.5 w-full rounded-lg border border-transparent bg-gray-100 px-3 py-2 outline-none transition-all duration-200 hover:border-gray-300 focus:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-700 dark:focus:border-gray-600"
+            class="[&>label]:!h-10.5 [&>label]:!py-0"
             name="description"
             :maxlength="50"
-            type="text"
           />
         </div>
         <div>
@@ -143,21 +141,20 @@ reset();
               <IconMdiCheck v-if="color === clr.hex" class="text-lg text-white drop-shadow" />
             </button>
           </div>
-          <div class="mt-3 flex items-center gap-2">
+          <div class="mt-3 grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-2">
             <label
-              class="relative inline-flex h-10.5 w-10.5 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
+              class="relative inline-flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
               :style="{ backgroundColor: color || '#71717a' }"
               title="Choose a custom color"
             >
               <input v-model="color" type="color" class="absolute inset-0 h-full w-full cursor-pointer opacity-0" aria-label="Choose a custom channel color" />
               <IconMdiPaletteOutline class="pointer-events-none text-lg text-white drop-shadow" />
             </label>
-            <input
+            <InputText
               v-model.trim="color"
-              type="text"
-              class="h-10.5 min-w-0 flex-grow rounded-lg border border-transparent bg-gray-100 px-3 py-2 font-mono text-sm uppercase outline-none transition-all duration-200 hover:border-gray-300 focus:border-gray-400 dark:bg-gray-800 dark:hover:border-gray-700 dark:focus:border-gray-600"
+              class="h-12 min-w-0 font-mono text-sm uppercase [&>label]:!h-full [&>label]:!items-center [&>label]:!py-0 [&_input]:!h-full"
               placeholder="#RRGGBB"
-              maxlength="7"
+              :maxlength="7"
               aria-label="Custom channel color hex value"
             />
           </div>

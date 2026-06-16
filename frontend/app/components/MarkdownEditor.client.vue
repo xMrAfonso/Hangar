@@ -46,6 +46,7 @@ const internalEditing = computed({
   get: () => props.editing,
   set: (value) => emit("update:editing", value),
 });
+const showEditorActions = computed(() => props.deletable || props.saveable || props.cancellable);
 
 const errorMessages = computed(() => props.errorMessages);
 const { v, errors } = useValidation(props.label, props.rules, rawEdited, errorMessages);
@@ -136,7 +137,11 @@ function stopEditing() {
 <template>
   <div class="markdown-editor relative">
     <slot name="title" />
-    <div v-if="internalEditing" class="flex items-center justify-end gap-2" :class="hasSlotContent($slots.title) ? 'absolute top-2 right-2 z-2' : 'px-2 py-2'">
+    <div
+      v-if="internalEditing && showEditorActions"
+      class="flex items-center justify-end gap-2"
+      :class="hasSlotContent($slots.title) ? 'absolute top-2 right-2 z-2' : 'px-2 py-2'"
+    >
       <DeletePageModal @delete="deletePage">
         <template #activator="{ on }">
           <Button v-if="deletable" button-type="red" class="!h-9 !w-9 !p-0" :disabled="loading.delete" aria-label="Delete content" v-on="on">
@@ -185,10 +190,14 @@ function stopEditing() {
 @use "easymde/dist/easymde.min.css";
 
 .EasyMDEContainer {
-  margin-inline: 0.5rem;
+  margin-inline: 0;
 
   .editor-toolbar {
     padding: 0.5rem 0.75rem;
+  }
+
+  .editor-statusbar {
+    padding: 0.25rem 0.25rem 0;
   }
 
   .CodeMirror {

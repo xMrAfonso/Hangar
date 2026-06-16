@@ -90,7 +90,11 @@ useSeo(
           <Markdown v-else :raw="project?.mainPage.contents" />
         </Card>
       </ProjectPageMarkdown>
-      <Card v-if="sponsors || hasPerms(NamedPermission.EditSubjectSettings)" class="mt-4 !p-0 overflow-visible">
+      <Card
+        v-if="sponsors || hasPerms(NamedPermission.EditSubjectSettings)"
+        class="mt-4 !p-0 overflow-visible"
+        :class="{ 'sponsors-empty': !sponsors && !editingSponsors }"
+      >
         <ClientOnly v-if="hasPerms(NamedPermission.EditSubjectSettings)">
           <MarkdownEditor
             v-model:editing="editingSponsors"
@@ -121,7 +125,7 @@ useSeo(
           <h2 class="px-4 py-3 text-xl font-bold">{{ i18n.t("project.sponsors") }}</h2>
           <Markdown :raw="sponsors" class="pt-0" />
         </template>
-        <div v-if="!sponsors && !editingSponsors" class="px-4 py-8 text-center text-sm text-gray">
+        <div v-if="!sponsors && !editingSponsors" class="px-4 pt-1 pb-6 text-center text-sm text-gray">
           Add sponsor information, funding links, or acknowledgements for your project.
         </div>
       </Card>
@@ -207,7 +211,13 @@ useSeo(
         </Card>
       </template>
 
-      <MemberList v-if="project?.members" :members="project.members" :author="project.namespace.owner" :slug="project.name" class="overflow-visible" />
+      <MemberList v-if="project?.members" :members="project.members" :author="project.namespace.owner" :slug="project.name" class="overflow-visible" :editable="false" />
     </aside>
   </div>
 </template>
+
+<style scoped>
+.sponsors-empty :deep(.markdown-editor > .markdown) {
+  display: none;
+}
+</style>

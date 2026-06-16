@@ -47,8 +47,8 @@ const props = withDefaults(
           </slot>
         </span>
         <template v-if="props.buttonArrow">
-          <IconMdiChevronDown v-if="shown" class="text-lg flex-shrink-0" />
-          <IconMdiChevronUp v-else class="text-lg flex-shrink-0" />
+          <IconMdiChevronUp v-if="shown" class="text-lg flex-shrink-0" />
+          <IconMdiChevronDown v-else class="text-lg flex-shrink-0" />
         </template>
       </Button>
     </template>

@@ -18,6 +18,7 @@ const settingsTabs = computed(() => {
     { value: "general", title: i18n.t("project.settings.tabs.general") },
     { value: "links", title: i18n.t("project.settings.tabs.links") },
     { value: "banners", title: i18n.t("project.settings.tabs.banners") },
+    { value: "members", title: "Members" },
   ];
   if (hasPerms(NamedPermission.IsSubjectOwner) || hasPerms(NamedPermission.DeleteProject) || hasPerms(NamedPermission.HardDeleteProject)) {
     tabs.push({ value: "management", title: i18n.t("project.settings.tabs.management") });

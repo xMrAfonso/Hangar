@@ -15,12 +15,14 @@ const props = withDefaults(
     organization?: boolean;
     author?: string;
     slug?: string;
+    editable?: boolean;
   }>(),
   {
     organization: false,
     class: "",
     author: undefined,
     slug: undefined,
+    editable: true,
   }
 );
 
@@ -48,11 +50,13 @@ const canLeave = computed<boolean>(() => {
 
   return props.members.some((member) => member.user.id === authStore.user?.id && member.user.name !== props.author);
 });
-const canEdit = computed<boolean>(() => hasPerms(NamedPermission.EditSubjectSettings));
+const canEdit = computed<boolean>(() => props.editable && hasPerms(NamedPermission.EditSubjectSettings));
 const saving = ref<boolean>(false);
 const search = ref<string>("");
 const addErrors = ref<string[]>([]);
 const result = ref<string[]>([]);
+const selectedRole = ref<RoleData | undefined>([...roles].sort((role1, role2) => (role2.rank ?? Number.NEGATIVE_INFINITY) - (role1.rank ?? Number.NEGATIVE_INFINITY))[0]);
+const memberViewMode = ref<"list" | "grid">("list");
 
 watch(search, () => {
   addErrors.value = [];
@@ -85,7 +89,10 @@ function setRole(member: JoinableMemberProjectRoleTable | JoinableMemberOrganiza
   post(editableMember, "edit");
 }
 
-function invite(member: string, role: RoleData) {
+function invite(member: string, role: RoleData | undefined) {
+  if (!role) {
+    return "";
+  }
   const editableMember: EditableMember = { name: member, roleId: role.roleId };
   post(editableMember, "add");
   return "";
@@ -146,11 +153,51 @@ async function doSearch(val?: string) {
           <IconMdiHelpCircleOutline class="text-gray-400" />
         </Tooltip>
         <div class="grow" />
-        <MemberLeaveModal v-if="canLeave && author" :author="author" :organization="organization" :slug="slug" />
+        <div v-if="canEdit" class="background-default flex flex-row gap-0.5 overflow-hidden rounded-lg border p-0.5 dark:border-gray-800">
+          <button
+            type="button"
+            class="inline-flex h-7.5 items-center justify-center rounded-md border px-2 text-sm font-semibold leading-normal transition-all duration-250 hover:bg-gray-200 hover:border-gray-300 dark:hover:bg-gray-800 dark:hover:border-gray-700"
+            :class="memberViewMode === 'list' ? 'border-primary-500' : 'border-transparent'"
+            :style="
+              memberViewMode === 'list'
+                ? {
+                    backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
+                    borderColor: 'var(--primary-500)',
+                  }
+                : {}
+            "
+            title="List view"
+            aria-label="List view"
+            @click="memberViewMode = 'list'"
+          >
+            <IconMdiFormatListBulleted class="mr-1 text-sm" />
+            List
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-7.5 items-center justify-center rounded-md border px-2 text-sm font-semibold leading-normal transition-all duration-250 hover:bg-gray-200 hover:border-gray-300 dark:hover:bg-gray-800 dark:hover:border-gray-700"
+            :class="memberViewMode === 'grid' ? 'border-primary-500' : 'border-transparent'"
+            :style="
+              memberViewMode === 'grid'
+                ? {
+                    backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
+                    borderColor: 'var(--primary-500)',
+                  }
+                : {}
+            "
+            title="Grid view"
+            aria-label="Grid view"
+            @click="memberViewMode = 'grid'"
+          >
+            <IconMdiViewGridOutline class="mr-1 text-sm" />
+            Grid
+          </button>
+        </div>
+        <MemberLeaveModal v-if="canEdit && canLeave && author" :author="author" :organization="organization" :slug="slug" />
       </div>
     </template>
 
-    <div class="flex flex-col gap-2 px-3 pt-1 pb-3">
+    <div class="gap-2 px-3 pt-1 pb-3" :class="memberViewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'flex flex-col'">
       <div
         v-for="member in sortedMembers"
         :key="member.user.name"
@@ -209,7 +256,10 @@ async function doSearch(val?: string) {
         </DropdownButton>
       </div>
     </div>
-    <div v-if="canEdit" class="flex w-full items-start bg-transparent px-3 pb-3">
+    <div
+      v-if="canEdit"
+      class="grid w-full grid-cols-1 items-start gap-1.5 bg-transparent px-3 pb-2 sm:grid-cols-[minmax(0,1fr)_10rem_auto]"
+    >
       <div class="min-w-0 grow">
         <InputAutocomplete
           id="membersearch"
@@ -221,14 +271,38 @@ async function doSearch(val?: string) {
           @search="doSearch"
         />
       </div>
-      <DropdownButton :name="i18n.t('general.add')" class="ml-2" :button-arrow="false" button-class="!h-10.5 !w-10.5 !p-0">
+      <DropdownButton
+        button-size="medium"
+        button-type="transparent"
+        button-class="!h-10.5 !w-full !min-w-full !justify-between !py-2"
+        class="min-w-0"
+        match-width
+        spread-arrow
+      >
         <template #button-label>
-          <IconMdiAccountPlus />
+          <span class="w-full truncate text-left">{{ selectedRole?.title }}</span>
         </template>
-        <DropdownItem v-for="role of roles" :key="role.value" :disabled="saving" @click="invite(search, role)">
+        <DropdownItem
+          v-for="role of roles"
+          :key="role.value"
+          :disabled="saving"
+          :style="
+            selectedRole?.roleId === role.roleId
+              ? {
+                  backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
+                  borderColor: 'var(--primary-500)',
+                }
+              : {}
+          "
+          @click="selectedRole = role"
+        >
           {{ role.title }}
         </DropdownItem>
       </DropdownButton>
+      <Button class="!h-10.5 flex-shrink-0" :disabled="saving || search.length === 0 || !selectedRole" :loading="saving" @click="invite(search, selectedRole)">
+        <IconMdiAccountPlus class="mr-1" />
+        {{ i18n.t("general.add") }}
+      </Button>
     </div>
   </Card>
 </template>

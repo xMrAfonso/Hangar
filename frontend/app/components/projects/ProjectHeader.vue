@@ -138,7 +138,7 @@ function requiresConfirmation(): ConfirmationType {
         :img-src="project?.avatarUrl"
         size="xl"
       />
-      <div class="min-w-0 flex-grow overflow-hidden">
+      <div class="min-h-32 min-w-0 flex-grow overflow-hidden flex flex-col lt-sm:min-h-0">
         <div class="inline-flex items-center gap-3">
           <UserAvatar
             class="!w-14 !h-14 sm:hidden shadow-lg"
@@ -165,7 +165,7 @@ function requiresConfirmation(): ConfirmationType {
           </template>
           <Skeleton v-else />
         </div>
-        <div v-if="project" class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+        <div v-if="project" class="mt-auto flex -translate-y-1 flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <span class="inline-flex items-center gap-1.5">
             <IconMdiShapeOutline class="color-primary" />
             {{ i18n.t("project.category." + project.category) }}

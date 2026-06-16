@@ -149,16 +149,16 @@ onMounted(() => {
 
 <template>
   <div>
-    <div class="mb-6 flex flex-col items-center gap-4">
+    <div class="mb-10 flex flex-col items-center gap-4">
       <div ref="headerRef">
         <template v-if="index">
-          <h1 ref="pageChangeScrollAnchor" class="text-3xl font-bold uppercase text-center mt-4 flex flex-col w-full" data-allow-mismatch>
+          <h1 ref="pageChangeScrollAnchor" class="text-3xl font-bold uppercase text-center mt-4 whitespace-nowrap" data-allow-mismatch>
             <template v-if="ssr">
               Find your favorite <strong class="highlight bg-gradient-to-r from-primary-500 to-primary-400 text-transparent">Paper plugins</strong>
             </template>
             <template v-else>
               Find your favorite
-              <div class="h-[36px] overflow-hidden relative">
+              <div class="inline-block h-[36px] w-[310px] overflow-hidden relative align-bottom text-left">
                 <span class="flex flex-col absolute w-full anim">
                   <strong class="highlight bg-gradient-to-r from-primary-500 to-primary-400 text-transparent">Paper plugins</strong>
                   <strong class="highlight bg-gradient-to-r from-primary-500 to-primary-400 text-transparent">Velocity plugins</strong>
@@ -195,7 +195,7 @@ onMounted(() => {
               name="query"
               class="rounded-lg outline-none px-9 p-2 basis-full min-w-30 dark:bg-gray-800 truncate border border-transparent hover:border-gray-700 focus:border-gray-700 transition-all duration-200"
               type="text"
-              :placeholder="i18n.t('hangar.projectSearch.query', [projects?.pagination.count])"
+              :placeholder="`Search in ${projects?.pagination.count ?? 0} projects...`"
               v-on="useTracking('homepage-search', { platformName })"
             />
             <IconMdiMagnify class="absolute top-3 left-3 text-gray-500" />
@@ -466,7 +466,7 @@ onMounted(() => {
               name="categorySearch"
               class="rounded-lg px-9 py-2 w-full dark:bg-gray-800 my-1 border border-transparent hover:border-gray-700 focus:border-gray-700"
               type="text"
-              :placeholder="i18n.t('hangar.projectSearch.searchCategory')"
+              placeholder="Search a category..."
             />
             <IconMdiMagnify class="absolute top-4 left-3 text-gray-500" />
             <button v-if="categorySearch.length > 0" class="transition-all duration-250" @click="categorySearch = ''">

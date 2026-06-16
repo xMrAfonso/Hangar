@@ -4,6 +4,7 @@ import type { Project, ProjectCompact } from "#shared/types/backend";
 
 const i18n = useI18n();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const props = defineProps<{
   project: Project | ProjectCompact;
@@ -17,7 +18,8 @@ const formatName = (name: String) => {
 
 const supportedPlatforms = computed(() => ("supportedPlatforms" in props.project ? Object.keys(props.project.supportedPlatforms) : []));
 const projectPath = computed(() => `/${props.project.namespace.owner}/${props.project.namespace.slug}`);
-const showActions = computed(() => props.canEdit || hasPerms(NamedPermission.EditSubjectSettings) || hasPerms(NamedPermission.IsStaff));
+const canOpenSettings = computed(() => props.project.namespace.owner === authStore.user?.name || hasPerms(NamedPermission.EditSubjectSettings));
+const showActions = computed(() => props.canEdit || canOpenSettings.value || hasPerms(NamedPermission.IsStaff));
 
 async function togglePin() {
   try {
@@ -63,7 +65,7 @@ function openAction(path: string) {
               <IconMdiPin v-else />
             </Button>
             <Button
-              v-if="hasPerms(NamedPermission.EditSubjectSettings)"
+              v-if="canOpenSettings"
               button-type="borderless"
               class="!h-full !w-full !p-0 !text-xl !text-white"
               title="Project settings"
@@ -97,7 +99,7 @@ function openAction(path: string) {
             <IconMdiPin />
           </span>
         </div>
-        <div class="flex flex-col justify-between min-w-0 w-full">
+        <div class="lt-xl:min-h-100px flex min-h-125px min-w-0 w-full flex-col">
           <div class="flex w-full">
             <div class="flex-1 w-75% overflow-x-hidden line-height-tight">
               <div class="inline-flex items-center gap-x-1.5">
@@ -131,7 +133,7 @@ function openAction(path: string) {
               </Tooltip>
             </div>
           </div>
-          <div class="lt-sm:hidden flex justify-between w-full">
+          <div class="lt-sm:hidden mt-auto flex w-full justify-between">
             <div class="flex items-center">
               <CategoryLogo :category="project.category" :size="16" class="mr-1" />
               {{ i18n.t("project.category." + project.category) }}

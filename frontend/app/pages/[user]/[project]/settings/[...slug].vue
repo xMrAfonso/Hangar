@@ -25,6 +25,7 @@ const tabs = ref([
   { value: "general", header: i18n.t("project.settings.tabs.general") },
   { value: "links", header: i18n.t("project.settings.tabs.links") },
   { value: "banners", header: i18n.t("project.settings.tabs.banners") },
+  { value: "members", header: "Members" },
   // { value: "donation", header: i18n.t("project.settings.tabs.donation") },
 ] satisfies Tab<string>[]);
 
@@ -447,7 +448,7 @@ useSeo(
           </Card>
         </template>
         <template #management>
-          <div class="grid gap-3 sm:grid-cols-2 items-start">
+          <div class="grid gap-3 items-start">
             <Card>
               <div v-if="hasPerms(NamedPermission.IsSubjectOwner)" class="mb-4">
                 <h3 class="text-lg font-semibold">Rename</h3>
@@ -539,11 +540,10 @@ useSeo(
                 </div>
               </div>
             </Card>
-
-            <div>
-              <MemberList :members="project?.members || []" :author="project?.namespace?.owner" :slug="project?.name" class="mb-4 h-max overflow-visible" />
-            </div>
           </div>
+        </template>
+        <template #members>
+          <MemberList :members="project?.members || []" :author="project?.namespace?.owner" :slug="project?.name" class="mb-4 h-max overflow-visible" />
         </template>
         <!--<template #donation>
           <Alert type="info" class="my-4">Coming Soon!</Alert>

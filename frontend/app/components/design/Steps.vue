@@ -93,13 +93,17 @@ async function goto(step: Step) {
 
 <template>
   <div class="space-y-4">
-    <nav class="background-default overflow-x-auto rounded-xl border border-gray-200 p-1 dark:border-gray-800">
+    <nav class="background-default inline-block max-w-full overflow-x-auto rounded-xl border border-gray-200 p-1 align-top dark:border-gray-800">
       <div class="flex min-w-max items-center gap-1">
         <div v-for="(step, index) in steps" :key="step.value">
           <button
             type="button"
-            class="inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-semibold transition-colors"
-            :class="internalValue === step.value ? 'border-primary-500 color-primary' : 'border-transparent text-gray hover:bg-gray-100 dark:hover:bg-gray-800'"
+            class="inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-semibold transition-all duration-250"
+            :class="
+              internalValue === step.value
+                ? 'border-primary-500 color-primary'
+                : 'border-transparent text-gray hover:border-gray-300 hover:bg-gray-100 dark:hover:border-gray-700 dark:hover:bg-gray-800'
+            "
             :style="
               internalValue === step.value
                 ? {
@@ -137,7 +141,8 @@ async function goto(step: Step) {
       <div v-if="showBack || showNext" class="flex items-center justify-between gap-3 px-5 pb-5">
         <Button
           v-if="showBack"
-          :button-type="activeStepIndex === 1 ? 'red' : 'secondary'"
+          :button-type="activeStepIndex === 1 ? 'borderless' : 'secondary'"
+          :class="activeStepIndex === 1 ? '!border-red-600 !bg-red-900/30 text-white hover:!border-red-500 hover:!bg-red-900/40' : ''"
           :disabled="disableBack"
           size="medium"
           @click="back"

@@ -115,9 +115,9 @@ const hasResults = computed(() => {
       class="flex items-center gap-2 min-w-96 rounded-lg px-4 py-2 dark:bg-gray-800 border border-transparent hover:border-gray-700 transition-all duration-200 hover:text-white cursor-text"
       @click="openModal"
     >
-      <IconMdiMagnify class="text-gray-500" />
-      <span class="text-gray-500">{{ i18n.t("hangar.globalSearch.query") }}</span>
-      <span class="ml-auto flex items-center gap-1 text-xs text-gray-500" aria-hidden="true">
+      <IconMdiMagnify class="text-gray-600 dark:text-charcoal-200" />
+      <span class="text-gray-600 dark:text-charcoal-200">Search in Hangar...</span>
+      <span class="ml-auto flex items-center gap-1 text-xs text-gray-600 dark:text-charcoal-200" aria-hidden="true">
         <kbd class="rounded border border-gray-600 px-1.5 py-0.5 font-sans">{{ shortcutModifier }}</kbd>
         <kbd class="rounded border border-gray-600 px-1.5 py-0.5 font-sans">K</kbd>
       </span>
@@ -137,11 +137,11 @@ const hasResults = computed(() => {
                 ref="searchInput"
                 v-model="query"
                 type="text"
-                :placeholder="i18n.t('hangar.globalSearch.query')"
+                placeholder="Search in Hangar..."
                 class="w-full rounded-lg pl-9 px-4 py-2 dark:bg-gray-800 border border-transparent focus:border-gray-700 hover:border-gray-700"
                 @keydown.esc="closeModal"
               />
-              <IconMdiMagnify class="absolute top-6 left-6 text-gray-500" />
+              <IconMdiMagnify class="absolute top-6 left-6 text-gray-600 dark:text-charcoal-200" />
               <button v-if="query.length > 0" class="transition-all duration-250" @click="query = ''">
                 <IconMdiClose class="absolute top-6 right-6 text-gray-500 hover:text-white" />
               </button>
