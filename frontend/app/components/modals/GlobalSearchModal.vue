@@ -162,7 +162,7 @@ const hasResults = computed(() => {
 
                 <!-- No Results Message -->
                 <div v-else-if="!hasResults" class="h-full flex items-center justify-center text-lg text-center text-gray-500 dark:text-gray-400">
-                  "Sorry but couldn't find any results \uD83D\uDE22"
+                  Sorry but couldn't find any results! 😔
                 </div>
 
                 <!-- Results Sections -->
