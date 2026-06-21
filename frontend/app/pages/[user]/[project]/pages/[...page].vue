@@ -21,8 +21,8 @@ const open = useOpenProjectPages(route, props.project);
 </script>
 
 <template>
-  <div class="flex flex-wrap md:flex-nowrap gap-4">
-    <section class="basis-full md:basis-9/12 flex-grow overflow-auto">
+  <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
+    <section class="min-w-0 overflow-auto">
       <ProjectPageMarkdown
         :key="route.fullPath"
         v-slot="{ editingPage, changeEditingPage, savePage, deletePage }"
@@ -30,9 +30,10 @@ const open = useOpenProjectPages(route, props.project);
         :page="page"
         :main-page="false"
       >
-        <Card v-if="page" class="pb-0 overflow-clip overflow-hidden">
+        <Card v-if="page" class="!p-0 pb-0 overflow-clip overflow-hidden">
           <ClientOnly v-if="hasPerms(NamedPermission.EditPage)">
             <MarkdownEditor
+              class="project-page-editor"
               :editing="editingPage"
               :raw="page.contents"
               :deletable="page.deletable"
@@ -51,8 +52,8 @@ const open = useOpenProjectPages(route, props.project);
       </ProjectPageMarkdown>
       <!--We have to blow up v-model:editing into :editing and @update:editing as we are inside a scope--->
     </section>
-    <section class="basis-full md:basis-3/12 flex-grow">
+    <aside class="space-y-4 self-start lg:sticky lg:top-4">
       <ProjectPageList :project="project" :open="open" />
-    </section>
+    </aside>
   </div>
 </template>

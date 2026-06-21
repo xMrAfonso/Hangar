@@ -44,6 +44,7 @@ defineExpose({ validation: v });
     <template #default="slotProps">
       <input
         v-model="value"
+        class="min-w-0 flex-grow bg-transparent px-3 py-0.5 outline-none"
         :type="show ? 'text' : 'password'"
         v-bind="$attrs"
         :placeholder="$attrs.placeholder?.toString() || label"
@@ -54,8 +55,8 @@ defineExpose({ validation: v });
       />
     </template>
     <template #append>
-      <IconMdiEye v-if="show" @click="show = false" />
-      <IconMdiEyeOff v-else @click="show = true" />
+      <IconMdiEye v-if="show" class="mx-3 cursor-pointer" @click="show = false" />
+      <IconMdiEyeOff v-else class="mx-3 cursor-pointer" @click="show = true" />
     </template>
     <!-- @vue-ignore -->
     <template v-for="(_, name) in $slots" #[name]="slotData">

@@ -9,24 +9,23 @@ const props = withDefaults(
 );
 
 const color = computed(() => {
-  // map type to bg-color
   return {
-    success: "bg-green-500 border-green-600",
-    info: "bg-primary-500 border-primary-600",
-    warning: "bg-yellow-500 border-yellow-600",
-    danger: "bg-red-500 font-semibold border-red-600",
-    neutral: "background-default border dark:border-gray-800",
+    success: "border-green-500 bg-green-500/30",
+    info: "border-primary-500 bg-primary-500/25",
+    warning: "border-yellow-500 bg-yellow-500/30",
+    danger: "border-[#ff544b] bg-[#ff544b60] font-semibold",
+    neutral: "border-gray-300 bg-gray-100/60 dark:border-gray-800 dark:bg-charcoal-500/60",
   }[props.type];
 });
 </script>
 
 <template>
-  <div :class="'flex flex-row items-center rounded-md p-4 text-black dark:text-white border-l-6 border-solid ' + color">
-    <slot name="icon" clazz="mr-3 w-8 h-8 min-w-8">
-      <IconMdiAlert v-if="props.type === 'danger'" class="mr-3 w-8 h-8 min-w-8" />
-      <IconMdiAlertBox v-else-if="props.type === 'warning'" class="mr-3 w-8 h-8 min-w-8" />
-      <IconMdiInformation v-else-if="props.type === 'info' || props.type === 'neutral'" class="mr-3 w-8 h-8 min-w-8" />
-      <IconMdiTrophy v-else-if="props.type === 'success'" class="mr-3 w-8 h-8 min-w-8" />
+  <div :class="'flex flex-row items-center rounded-xl border border-solid px-4 py-2.5 text-black dark:text-white ' + color">
+    <slot name="icon" clazz="mr-3 w-6 h-6 min-w-6">
+      <IconMdiAlert v-if="props.type === 'danger'" class="mr-3 h-6 min-w-6 w-6" />
+      <IconMdiAlertBox v-else-if="props.type === 'warning'" class="mr-3 h-6 min-w-6 w-6" />
+      <IconMdiInformation v-else-if="props.type === 'info' || props.type === 'neutral'" class="mr-3 h-6 min-w-6 w-6" />
+      <IconMdiTrophy v-else-if="props.type === 'success'" class="mr-3 h-6 min-w-6 w-6" />
     </slot>
     <slot />
   </div>

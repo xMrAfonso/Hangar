@@ -13,6 +13,7 @@ const emit = defineEmits<{
 
 const flagReason = ref<string>();
 const flagComment = ref<string>();
+const missingReason = ref(false);
 const loading = ref(false);
 
 function reasonLabel(reason: string) {
@@ -28,10 +29,16 @@ function reasonLabel(reason: string) {
 function resetForm() {
   flagReason.value = undefined;
   flagComment.value = undefined;
+  missingReason.value = false;
   loading.value = false;
 }
 
 async function submit(close: () => void) {
+  if (!flagReason.value) {
+    missingReason.value = true;
+    return;
+  }
+
   loading.value = true;
   try {
     await useInternalApi("flags/", "POST", {
@@ -59,6 +66,11 @@ async function submit(close: () => void) {
   >
     <template #default="{ on }">
       <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">Select the reason that best describes why you are reporting this project.</p>
+      <Transition name="fade">
+        <div v-if="missingReason" class="mb-3 rounded-xl border border-[#ff544b] bg-[#ff544b60] px-4 py-2.5 text-sm font-semibold">
+          Select at least one reason before submitting.
+        </div>
+      </Transition>
 
       <div class="flex flex-col gap-1">
         <InputRadio
@@ -66,7 +78,10 @@ async function submit(close: () => void) {
           :key="reason.type"
           :model-value="flagReason"
           :value="reason.type"
-          @update:model-value="flagReason = $event"
+          @update:model-value="
+            flagReason = $event;
+            missingReason = false;
+          "
         >
           <IconMdiAlertOutline v-if="reason.type === 'INAPPROPRIATE_CONTENT'" class="ml-4 text-lg text-gray-400" />
           <IconMdiAccountAlertOutline v-else-if="reason.type === 'IMPERSONATION'" class="ml-4 text-lg text-gray-400" />
@@ -85,7 +100,7 @@ async function submit(close: () => void) {
       />
 
       <div class="mt-4 flex justify-end">
-        <Button button-type="secondary" size="medium" :loading="loading" :disabled="!flagReason || !flagComment" @click="submit(on.click)"> Submit </Button>
+        <Button button-type="secondary" size="medium" :loading="loading" @click="submit(on.click)"> Submit </Button>
       </div>
     </template>
     <template #activator="{ on }">

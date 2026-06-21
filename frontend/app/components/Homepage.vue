@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Platform, Tag } from "#shared/types/backend";
-import type { Category } from "#shared/types/backend";
+import type { Category, PaginatedResultProject } from "#shared/types/backend";
 import type { LocationQueryValue } from "#vue-router";
 import CollapsibleCard from "~/components/design/CollapsibleCard.vue";
 
@@ -22,8 +22,12 @@ const sorters = [
   { id: "-newest", label: i18n.t("project.sorting.newest") },
 ];
 
-const toArray = (input: LocationQueryValue | LocationQueryValue[] | undefined): string[] =>
-  Array.isArray(input) ? (input as string[]) : (input ? [input!] : []);
+function toArray(input: LocationQueryValue | LocationQueryValue[] | undefined): string[] {
+  if (Array.isArray(input)) {
+    return input as string[];
+  }
+  return input ? [input] : [];
+}
 const showAllVersions = ref(false);
 const filters = ref({
   versions: toArray(route.query.version),
@@ -37,16 +41,18 @@ if (props.platform) {
 }
 
 const limit = ref<number>(20);
+const queryLimit = ref<number>(limit.value);
 const limits = [5, 10, 15, 20, 50, 75, 100];
 const activeSorter = ref<string>((route.query.sort as string) || "-stars");
 
 const page = ref(route.query.page ? Number(route.query.page) : 0);
+const queryOffset = ref(page.value * limit.value);
 const query = ref<string>((route.query.query as string) || "");
 
 const requestParams = computed(() => {
   const params: ReturnType<Parameters<typeof useProjects>[0]> = {
-    limit: limit.value,
-    offset: page.value * limit.value,
+    limit: queryLimit.value,
+    offset: queryOffset.value,
     version: filters.value.versions,
     category: filters.value.categories,
     platform: filters.value.platform ? [filters.value.platform] : [],
@@ -62,23 +68,75 @@ const requestParams = computed(() => {
   return params;
 });
 
-const { projects, projectsStatus, refreshProjects } = useProjects(() => requestParams.value, router);
+const { projects, projectsStatus } = useProjects(() => requestParams.value, router);
 const loading = computed(() => projectsStatus.value === "loading");
+const previousProjects = shallowRef<PaginatedResultProject>();
+const isLoadingMoreProjects = ref(false);
+const displayedProjects = computed<PaginatedResultProject | undefined>(() => {
+  const source = projects.value ?? previousProjects.value;
+  if (!source) {
+    return;
+  }
+
+  return {
+    ...source,
+    pagination: {
+      ...source.pagination,
+      limit: limit.value,
+      offset: page.value * limit.value,
+    },
+    result: source.result.slice(0, limit.value),
+  };
+});
+const projectCountForPlaceholder = computed(() => projects.value?.pagination.count ?? previousProjects.value?.pagination.count ?? 0);
 
 // if somebody set page too high, lets reset it back
-watch(projects, () => {
-  if (projects.value && projects.value.pagination?.offset !== 0 && projects.value.pagination?.offset > projects.value.pagination?.count) {
-    page.value = 0;
-  }
-});
+watch(
+  projects,
+  () => {
+    if (projects.value && projects.value.pagination?.offset !== 0 && projects.value.pagination?.offset > projects.value.pagination?.count) {
+      page.value = 0;
+    }
+    if (projects.value) {
+      previousProjects.value = projects.value;
+      isLoadingMoreProjects.value = false;
+    }
+  },
+  { immediate: true }
+);
 
 watch(
-  () => [filters.value.versions, filters.value.categories, filters.value.tags, filters.value.platform, query.value, activeSorter.value, page.value],
-  async () => {
-    await refreshProjects();
+  () => [filters.value.versions, filters.value.categories, filters.value.tags, filters.value.platform, query.value, activeSorter.value],
+  () => {
+    page.value = 0;
+    queryOffset.value = 0;
+    queryLimit.value = limit.value;
+    isLoadingMoreProjects.value = false;
   },
   { deep: true }
 );
+
+function updateProjectPage(newPage: number) {
+  page.value = newPage;
+  queryOffset.value = newPage * limit.value;
+  queryLimit.value = limit.value;
+  isLoadingMoreProjects.value = false;
+}
+
+function updateLimit(newLimit: number, close: () => void) {
+  const isIncreasing = newLimit > limit.value;
+  limit.value = newLimit;
+  page.value = 0;
+  close();
+
+  if (isIncreasing) {
+    queryOffset.value = 0;
+    queryLimit.value = newLimit;
+    isLoadingMoreProjects.value = true;
+  } else {
+    isLoadingMoreProjects.value = false;
+  }
+}
 
 function updatePlatform(platform: any) {
   filters.value.platform = platform;
@@ -91,7 +149,7 @@ function updatePlatform(platform: any) {
 
 const config = useRuntimeConfig();
 const pageChangeScrollAnchor = useTemplateRef<HTMLElement>("pageChangeScrollAnchor");
-const ssr = import.meta.server;
+const headlineMounted = ref(false);
 
 useSeo(
   computed(() => ({
@@ -129,6 +187,8 @@ const isStuck = ref(false);
 const headerRef = useTemplateRef<HTMLElement>("headerRef");
 
 onMounted(() => {
+  headlineMounted.value = true;
+
   const observer = new IntersectionObserver(
     (entries) => {
       const entry = entries[0];
@@ -153,7 +213,7 @@ onMounted(() => {
       <div ref="headerRef">
         <template v-if="index">
           <h1 ref="pageChangeScrollAnchor" class="text-3xl font-bold uppercase text-center mt-4 whitespace-nowrap" data-allow-mismatch>
-            <template v-if="ssr">
+            <template v-if="!headlineMounted">
               Find your favorite <strong class="highlight bg-gradient-to-r from-primary-500 to-primary-400 text-transparent">Paper plugins</strong>
             </template>
             <template v-else>
@@ -193,9 +253,12 @@ onMounted(() => {
             <input
               v-model="query"
               name="query"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
               class="rounded-lg outline-none px-9 p-2 basis-full min-w-30 dark:bg-gray-800 truncate border border-transparent hover:border-gray-700 focus:border-gray-700 transition-all duration-200"
               type="text"
-              :placeholder="`Search in ${projects?.pagination.count ?? 0} projects...`"
+              :placeholder="`Search in ${projectCountForPlaceholder} projects...`"
               v-on="useTracking('homepage-search', { platformName })"
             />
             <IconMdiMagnify class="absolute top-3 left-3 text-gray-500" />
@@ -227,9 +290,7 @@ onMounted(() => {
                   "
                   @click="
                     () => {
-                      limit = limitOption;
-                      page = 0;
-                      close();
+                      updateLimit(limitOption, close);
                     }
                   "
                 >
@@ -276,16 +337,17 @@ onMounted(() => {
           </DropdownButton>
         </Card>
         <Transition name="fade">
-          <div v-if="filters.platform === Platform.WATERFALL" class="px-4 py-2 text-center rounded-xl border border-[#ff544b] bg-[#ff544b60]">
+          <div v-if="filters.platform === Platform.WATERFALL" class="rounded-xl border border-[#ff544b] bg-[#ff544b60] px-4 py-2.5 text-center">
             <span class="text-lg font-bold">Warning!</span> Waterfall has reached end of life and is no longer actively maintained. It is highly recommended to
             migrate to <Link class="!text-white font-bold decoration-underline" href="https://papermc.io/software/velocity/">Velocity</Link>!
           </div>
         </Transition>
         <ProjectList
-          :projects="loading ? undefined : projects"
-          :loading="loading || !projects"
+          :projects="displayedProjects"
+          :loading="loading && !displayedProjects"
+          :append-loading="loading && isLoadingMoreProjects && !!displayedProjects"
           :reset-anchor="pageChangeScrollAnchor"
-          @update:page="(newPage) => (page = newPage)"
+          @update:page="updateProjectPage"
         />
       </div>
       <!-- Sidebar -->
@@ -299,7 +361,7 @@ onMounted(() => {
                 <span />
                 <Tooltip>
                   <button
-                    class="flex items-center rounded-full border border-transparent p-1 transition-all duration-250 hover:bg-red-900/50 hover:border-red-600"
+                    class="flex items-center rounded-md border border-transparent p-1 transition-all duration-250 hover:bg-red-900/50 hover:border-red-600"
                     cursor="pointer"
                     @click="
                       () => {
@@ -344,7 +406,7 @@ onMounted(() => {
                   <Tooltip>
                     <button
                       v-if="filters.versions"
-                      class="flex items-center rounded-full border border-transparent py-1 px-1 transition-all duration-250 hover:bg-red-900/50 hover:border-red-600"
+                      class="flex items-center rounded-md border border-transparent py-1 px-1 transition-all duration-250 hover:bg-red-900/50 hover:border-red-600"
                       cursor="pointer"
                       @click="
                         () => {
@@ -367,6 +429,9 @@ onMounted(() => {
               <input
                 v-model="versionSearch"
                 name="versionSearch"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
                 class="rounded-lg px-9 py-2 w-full dark:bg-gray-800 border border-transparent hover:border-gray-700 focus:border-gray-700 my-1"
                 type="text"
                 :placeholder="i18n.t('hangar.projectSearch.searchVersion')"
@@ -411,7 +476,7 @@ onMounted(() => {
                 <Tooltip>
                   <button
                     v-if="filters.tags"
-                    class="flex items-center rounded-full border border-transparent py-1 px-1 transition-all duration-250 hover:bg-red-900/50 hover:border-red-600"
+                    class="flex items-center rounded-md border border-transparent py-1 px-1 transition-all duration-250 hover:bg-red-900/50 hover:border-red-600"
                     cursor="pointer"
                     @click="filters.tags = []"
                   >
@@ -446,7 +511,7 @@ onMounted(() => {
                 <Tooltip>
                   <button
                     v-if="filters.tags"
-                    class="text-sm flex items-center rounded-full border border-transparent p-1 transition-all duration-250 hover:bg-red-900/50 hover:border-red-600"
+                    class="text-sm flex items-center rounded-md border border-transparent p-1 transition-all duration-250 hover:bg-red-900/50 hover:border-red-600"
                     cursor="pointer"
                     @click="filters.categories = []"
                   >
@@ -464,6 +529,9 @@ onMounted(() => {
             <input
               v-model="categorySearch"
               name="categorySearch"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
               class="rounded-lg px-9 py-2 w-full dark:bg-gray-800 my-1 border border-transparent hover:border-gray-700 focus:border-gray-700"
               type="text"
               placeholder="Search a category..."
@@ -477,7 +545,7 @@ onMounted(() => {
             <template v-if="filteredCategories.length === 0">
               <span class="text-center text-gray-400 my-auto">{{ i18n.t("hangar.projectSearch.noCategories") }}</span>
             </template>
-            <div v-else class="flex flex-col gap-1 mt-1 h-60 -px-1 overflow-y-auto overflow-x-hidden pt-2 pb-3">
+            <div v-else class="flex flex-col gap-1 mt-1 h-60 -px-1 overflow-y-auto overflow-x-hidden pt-2 pb-3 overscroll-contain" @wheel.stop>
               <template v-for="category in filteredCategories" :key="category.apiName">
                 <div class="mr-4 ml-1">
                   <InputCheckbox v-model="filters.categories" :value="category.apiName" :label="i18n.t(category.title)">

@@ -10,6 +10,7 @@ const props = withDefaults(
     expandable?: boolean;
     serverPagination?: Pagination;
     initialSorter?: Partial<Record<H, number>>;
+    clientSorters?: Partial<Record<H, (item: T) => string | number>>;
     maxSorters?: number;
     hidePagination?: boolean;
   }>(),
@@ -17,6 +18,7 @@ const props = withDefaults(
     maxSorters: 1,
     serverPagination: undefined,
     initialSorter: undefined,
+    clientSorters: undefined,
     hidePagination: false,
   }
 );
@@ -37,16 +39,27 @@ const displayedItems = computed(() => {
 });
 
 function sort() {
+  const sorterKeys = (Object.keys(sorter) as H[]).filter((field) => sorter[field] !== 0);
   if (props.serverPagination) {
-    // if we use server fetched data, we don't want to sort on the client, ever
+    if (sorterKeys.length > 0 && sorterKeys.every((field) => props.clientSorters?.[field])) {
+      sorted.value = sortItems(props.items);
+      return;
+    }
     sorted.value = props.items;
     return;
   }
-  sorted.value = props.items.toSorted((a, b) => {
+  sorted.value = sortItems(props.items);
+}
+
+function sortItems(items: T[]) {
+  return items.toSorted((a, b) => {
     for (const field of Object.keys(sorter) as Array<keyof typeof sorter>) {
       if (sorter[field] === 0) continue;
-      if (a[field] > b[field]) return sorter[field];
-      if (a[field] < b[field]) return -sorter[field];
+      const getValue = props.clientSorters?.[field as H];
+      const aValue = getValue ? getValue(a) : a[field as keyof T];
+      const bValue = getValue ? getValue(b) : b[field as keyof T];
+      if (aValue > bValue) return sorter[field];
+      if (aValue < bValue) return -sorter[field];
     }
     return 0;
   });

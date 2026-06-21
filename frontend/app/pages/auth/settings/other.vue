@@ -34,7 +34,6 @@ const languages = (useRuntimeConfig().public.i18n.locales as { code: typeof i18n
   value: locale.code,
   text: locale.name,
 }));
-const selectedLanguage = computed(() => languages.find((language) => language.value === locale.value));
 
 watch(locale, async (newLocale) => {
   i18n.locale.value = newLocale;
@@ -95,34 +94,14 @@ watch(locale, async (newLocale) => {
           <span>{{ i18n.t("auth.settings.misc.alert.languageAlert") }}</span>
         </div>
         <div class="mt-4">
-          <DropdownButton button-size="medium" button-type="transparent" match-width spread-arrow>
+          <DropdownSelect v-model="locale" :values="languages" item-value="value" item-text="text">
             <template #button-label>
               <div class="flex w-44 items-center justify-start gap-2">
                 <IconMdiWeb />
-                <span class="truncate">{{ selectedLanguage?.text }}</span>
+                <span class="truncate">{{ languages.find((language) => language.value === locale)?.text }}</span>
               </div>
             </template>
-            <template #default="{ close }">
-              <DropdownItem
-                v-for="language in languages"
-                :key="language.value"
-                :style="
-                  locale === language.value
-                    ? {
-                        backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
-                        borderColor: 'var(--primary-500)',
-                      }
-                    : {}
-                "
-                @click="
-                  locale = language.value;
-                  close();
-                "
-              >
-                {{ language.text }}
-              </DropdownItem>
-            </template>
-          </DropdownButton>
+          </DropdownSelect>
         </div>
       </Card>
     </div>

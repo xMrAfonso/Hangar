@@ -339,20 +339,44 @@ export function useAuthors(params: () => { offset?: number; limit?: number; sort
   return { authors, authorStatus };
 }
 
-export function useWatchers(project: () => string) {
+export function useWatchers(params: () => string | { project: string; limit?: number; offset?: number }) {
   const { data: watchers, status: watchersStatus } = useData(
-    project,
-    (p) => "watchers:" + p,
-    (p) => useApi<PaginatedResultUser>(`projects/${p}/watchers`)
+    params,
+    (p) => {
+      const project = typeof p === "string" ? p : p.project;
+      const limit = typeof p === "string" ? 100 : (p.limit ?? 100);
+      const offset = typeof p === "string" ? 0 : (p.offset ?? 0);
+      return "watchers:" + project + ":" + limit + ":" + offset;
+    },
+    (p) => {
+      const project = typeof p === "string" ? p : p.project;
+      const limit = typeof p === "string" ? 100 : (p.limit ?? 100);
+      const offset = typeof p === "string" ? 0 : (p.offset ?? 0);
+      return useApi<PaginatedResultUser>(`projects/${project}/watchers`, "GET", { limit, offset });
+    },
+    true,
+    (p) => !(typeof p === "string" ? p : p.project)
   );
   return { watchers, watchersStatus };
 }
 
-export function useStargazers(project: () => string) {
+export function useStargazers(params: () => string | { project: string; limit?: number; offset?: number }) {
   const { data: stargazers, status: stargazersStatus } = useData(
-    project,
-    (p) => "stargazers:" + p,
-    (p) => useApi<PaginatedResultUser>(`projects/${p}/stargazers`)
+    params,
+    (p) => {
+      const project = typeof p === "string" ? p : p.project;
+      const limit = typeof p === "string" ? 100 : (p.limit ?? 100);
+      const offset = typeof p === "string" ? 0 : (p.offset ?? 0);
+      return "stargazers:" + project + ":" + limit + ":" + offset;
+    },
+    (p) => {
+      const project = typeof p === "string" ? p : p.project;
+      const limit = typeof p === "string" ? 100 : (p.limit ?? 100);
+      const offset = typeof p === "string" ? 0 : (p.offset ?? 0);
+      return useApi<PaginatedResultUser>(`projects/${project}/stargazers`, "GET", { limit, offset });
+    },
+    true,
+    (p) => !(typeof p === "string" ? p : p.project)
   );
   return { stargazers, stargazersStatus };
 }

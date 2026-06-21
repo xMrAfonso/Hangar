@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { Header } from "#shared/types/components/SortableTable";
+import type { PaginatedResultUser } from "#shared/types/backend";
 
 const i18n = useI18n();
 const route = useRoute("users");
@@ -13,7 +14,7 @@ const headers = computed(
     [
       { name: "pic", title: "", sortable: false },
       { name: "name", title: i18n.t("pages.headers.username"), sortable: true },
-      { name: "roles", title: i18n.t("pages.headers.roles"), sortable: true },
+      { name: "roles", title: i18n.t("pages.headers.roles"), sortable: false },
       { name: "createdAt", title: i18n.t("pages.headers.joined"), sortable: true },
       { name: "projectCount", title: i18n.t("pages.headers.projects"), sortable: !staffOnly.value },
     ] satisfies Header<string>[]
@@ -38,19 +39,54 @@ const staffRequestParams = computed(() => {
 });
 const { authors } = useAuthors(() => authorRequestParams.value);
 const { staff } = useStaff(() => staffRequestParams.value);
-const users = computed(() => (staffOnly.value ? staff.value : authors.value));
+const previousAuthors = shallowRef<PaginatedResultUser>();
+const previousStaff = shallowRef<PaginatedResultUser>();
+const users = computed(() => (staffOnly.value ? (staff.value ?? previousStaff.value) : (authors.value ?? previousAuthors.value)));
+const userClientSorters = {
+  roles: (user: { roles: number[] }) =>
+    user.roles
+      .map((roleId) => {
+        const role = getRole(roleId);
+        return `${String(role?.rank ?? 9999).padStart(4, "0")}:${role?.title ?? ""}`;
+      })
+      .toSorted()
+      .join("|"),
+};
 
 watch(query, () => {
   page.value = 0;
 });
 
+watch(
+  authors,
+  () => {
+    if (authors.value) {
+      previousAuthors.value = authors.value;
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  staff,
+  () => {
+    if (staff.value) {
+      previousStaff.value = staff.value;
+    }
+  },
+  { immediate: true }
+);
+
 watch(staffOnly, (enabled) => {
   page.value = 0;
-  sort.value = enabled ? ["roles"] : ["-projectCount"];
+  sort.value = enabled ? ["-projectCount"] : ["-projectCount"];
 });
 
 function updateSort(col: string, sorter: Record<string, number>) {
   if (staffOnly.value && col === "projectCount") {
+    return;
+  }
+  if (col === "roles") {
     return;
   }
 
@@ -69,11 +105,6 @@ useSeo(computed(() => ({ title: "Users", description: "Browse Hangar users and s
 
 <template>
   <div class="flex flex-col gap-4">
-    <div>
-      <PageTitle>Users</PageTitle>
-      <p class="mt-1 text-gray">Browse project creators and Hangar staff.</p>
-    </div>
-
     <Card class="flex flex-col gap-3 sm:flex-row sm:items-center">
       <div class="relative flex h-10.5 min-w-0 flex-grow rounded-md transition-all duration-200">
         <input
@@ -119,7 +150,8 @@ useSeo(computed(() => ({ title: "Users", description: "Browse Hangar users and s
         :headers="headers"
         :items="users?.result || []"
         :server-pagination="users?.pagination"
-        :initial-sorter="staffOnly ? { roles: 1 } : { projectCount: -1 }"
+        :client-sorters="userClientSorters"
+        :initial-sorter="{ projectCount: -1 }"
         hide-pagination
         @update:sort="updateSort"
         @update:page="(p) => (page = p)"

@@ -1,12 +1,85 @@
 <script setup lang="ts">
 import { NamedPermission } from "#shared/types/backend";
-import type { HangarProject } from "#shared/types/backend";
+import type { HangarProject, PaginatedResultUser, User } from "#shared/types/backend";
 
 const props = defineProps<{
   project?: HangarProject;
 }>();
 const i18n = useI18n();
 const namespace = computed(() => props.project?.namespace?.owner + "/" + props.project?.name);
+const userListLimit = 100;
+const stargazersOffset = ref(0);
+const watchersOffset = ref(0);
+const stargazerUsers = ref<User[]>([]);
+const watcherUsers = ref<User[]>([]);
+const stargazerPagination = ref<PaginatedResultUser["pagination"]>();
+const watcherPagination = ref<PaginatedResultUser["pagination"]>();
+const { stargazers, stargazersStatus } = useStargazers(() => ({
+  project: props.project?.namespace?.slug ?? "",
+  limit: userListLimit,
+  offset: stargazersOffset.value,
+}));
+const { watchers, watchersStatus } = useWatchers(() => ({
+  project: props.project?.namespace?.slug ?? "",
+  limit: userListLimit,
+  offset: watchersOffset.value,
+}));
+
+watch(
+  () => props.project?.namespace?.slug,
+  () => {
+    stargazersOffset.value = 0;
+    watchersOffset.value = 0;
+    stargazerUsers.value = [];
+    watcherUsers.value = [];
+    stargazerPagination.value = undefined;
+    watcherPagination.value = undefined;
+  }
+);
+
+function mergeUsers(existing: User[], next: User[]) {
+  const names = new Set(existing.map((user) => user.name));
+  return [...existing, ...next.filter((user) => !names.has(user.name))];
+}
+
+watch(
+  stargazers,
+  () => {
+    if (!stargazers.value) return;
+    stargazerPagination.value = stargazers.value.pagination;
+    stargazerUsers.value = stargazersOffset.value === 0 ? stargazers.value.result : mergeUsers(stargazerUsers.value, stargazers.value.result);
+  },
+  { immediate: true }
+);
+
+watch(
+  watchers,
+  () => {
+    if (!watchers.value) return;
+    watcherPagination.value = watchers.value.pagination;
+    watcherUsers.value = watchersOffset.value === 0 ? watchers.value.result : mergeUsers(watcherUsers.value, watchers.value.result);
+  },
+  { immediate: true }
+);
+
+const stargazerList = computed<PaginatedResultUser | undefined>(() =>
+  stargazerPagination.value ? { pagination: stargazerPagination.value, result: stargazerUsers.value } : undefined
+);
+const watcherList = computed<PaginatedResultUser | undefined>(() =>
+  watcherPagination.value ? { pagination: watcherPagination.value, result: watcherUsers.value } : undefined
+);
+const canLoadMoreStargazers = computed(() => stargazerUsers.value.length < (stargazerPagination.value?.count ?? 0));
+const canLoadMoreWatchers = computed(() => watcherUsers.value.length < (watcherPagination.value?.count ?? 0));
+
+function loadMoreStargazers() {
+  if (stargazersStatus.value === "loading" || !canLoadMoreStargazers.value) return;
+  stargazersOffset.value += userListLimit;
+}
+
+function loadMoreWatchers() {
+  if (watchersStatus.value === "loading" || !canLoadMoreWatchers.value) return;
+  watchersOffset.value += userListLimit;
+}
 </script>
 
 <template>
@@ -71,13 +144,19 @@ const namespace = computed(() => props.project?.namespace?.owner + "/" + props.p
             </span>
           </div>
         </div>
-        <NuxtLink
-          :to="`/${namespace}/stars`"
-          class="flex min-h-17 flex-col rounded-lg border border-charcoal-500 bg-gray-100 p-1.5 text-center transition-colors hover:border-gray-700 dark:bg-charcoal-500"
+        <ProjectUserListModal
+          :title="i18n.t('project.stargazers')"
+          :count="project?.stats?.stars || 0"
+          :users="stargazerList"
+          :status="stargazersStatus"
+          :can-load-more="canLoadMoreStargazers"
+          :loading-more="stargazersStatus === 'loading' && stargazerUsers.length > 0"
+          @load-more="loadMoreStargazers"
         >
+          <template #default="{ count }">
           <div class="flex-1 flex items-center justify-center">
             <div class="font-semibold">
-              {{ project?.stats?.stars?.toLocaleString("en-US") || 0 }}
+              {{ count?.toLocaleString("en-US") || 0 }}
             </div>
           </div>
 
@@ -85,15 +164,22 @@ const namespace = computed(() => props.project?.namespace?.owner + "/" + props.p
             <IconMdiStarOutline class="shrink-0" />
             <span>{{ i18n.t("project.info.stars", 0) }}</span>
           </div>
-        </NuxtLink>
+          </template>
+        </ProjectUserListModal>
 
-        <NuxtLink
-          :to="`/${namespace}/watchers`"
-          class="flex min-h-17 flex-col rounded-lg border border-charcoal-500 bg-gray-100 p-1.5 text-center transition-colors hover:border-gray-700 dark:bg-charcoal-500"
+        <ProjectUserListModal
+          :title="i18n.t('project.watchers')"
+          :count="project?.stats?.watchers || 0"
+          :users="watcherList"
+          :status="watchersStatus"
+          :can-load-more="canLoadMoreWatchers"
+          :loading-more="watchersStatus === 'loading' && watcherUsers.length > 0"
+          @load-more="loadMoreWatchers"
         >
+          <template #default="{ count }">
           <div class="flex-1 flex items-center justify-center">
             <div class="font-semibold">
-              {{ project?.stats?.watchers?.toLocaleString("en-US") || 0 }}
+              {{ count?.toLocaleString("en-US") || 0 }}
             </div>
           </div>
 
@@ -101,7 +187,8 @@ const namespace = computed(() => props.project?.namespace?.owner + "/" + props.p
             <IconMdiBellOutline class="shrink-0" />
             <span>{{ i18n.t("project.info.watchers", 0) }}</span>
           </div>
-        </NuxtLink>
+          </template>
+        </ProjectUserListModal>
       </div>
     </template>
     <template #footer>

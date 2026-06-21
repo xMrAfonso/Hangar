@@ -1,19 +1,27 @@
 <script setup lang="ts">
 import { NuxtLink } from "#components";
+import type { RouteLocationRaw } from "vue-router";
 
 const { t } = useI18n();
 
-const hangarLinks = computed(() => [
+type FooterLink = {
+  label: string;
+  to?: RouteLocationRaw;
+  href?: string;
+  external?: boolean;
+};
+
+const hangarLinks = computed<FooterLink[]>(() => [
   { label: t("hangar.footer.org"), href: "https://github.com/HangarMC", external: true },
   { label: t("hangar.footer.status"), href: "https://status.papermc.io", external: true },
   { label: t("hangar.footer.api"), to: { name: "api-docs" } },
-  { label: t("hangar.footer.guidelines"), to: { name: "guidelines" } },
+  { label: t("hangar.footer.guidelines"), to: "/support/guidelines" },
 ]);
 
-const legalLinks = computed(() => [
-  { label: t("hangar.footer.terms"), to: { name: "terms" } },
-  { label: t("hangar.footer.privacypolicy"), to: { name: "privacy" } },
-  { label: t("hangar.footer.legalNotice"), href: "https://forums.papermc.io/help/legal-notice/", external: true },
+const legalLinks = computed<FooterLink[]>(() => [
+  { label: t("hangar.footer.terms"), to: "/support/tos" },
+  { label: t("hangar.footer.privacypolicy"), to: "/support/privacy" },
+  { label: t("hangar.footer.legalNotice"), to: "/support/legal-notice" },
 ]);
 
 const platformLinks = [

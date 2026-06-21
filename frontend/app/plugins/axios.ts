@@ -5,7 +5,7 @@ import type { NuxtApp } from "nuxt/app";
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig();
   const options: AxiosRequestConfig = {
-    baseURL: import.meta.client ? config.public.host : config.backendHost,
+    baseURL: import.meta.client ? "" : config.backendHost,
     timeout: 10_000,
   };
   axiosLog("axios options", options);

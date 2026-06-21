@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { upperFirst } from "scule";
 import { NamedPermission } from "#shared/types/backend";
-import type { HangarProject, PinnedVersion, User, Platform } from "#shared/types/backend";
+import type { HangarProject, HangarProjectPage, PinnedVersion, User, Platform } from "#shared/types/backend";
 
 const props = defineProps<{
   user?: User;
@@ -31,6 +31,20 @@ function saveSponsors(content: string) {
 function createPinnedVersionUrl(version: PinnedVersion): string {
   return `/${props.project?.namespace?.owner}/${props.project?.namespace?.slug}/versions/${version.name}`;
 }
+
+function createPageUrl(page: HangarProjectPage): string {
+  if (page.home) {
+    return `/${props.project?.namespace?.owner}/${props.project?.namespace?.slug}`;
+  }
+  return `/${props.project?.namespace?.owner}/${props.project?.namespace?.slug}/pages/${page.slug}`;
+}
+
+function pageSlugs(pages: HangarProjectPage[]): string[] {
+  return pages.flatMap((page) => [page.slug, ...pageSlugs(page.children)]);
+}
+
+const projectPages = computed(() => props.project?.pages ?? []);
+const openProjectPages = computed(() => pageSlugs(projectPages.value));
 
 const platform = computed(() =>
   upperFirst(Object.keys(props.project?.pinnedVersions?.[0]?.platformDependenciesFormatted || { Minecraft: "dum" })?.[0]?.toLowerCase() || "Minecraft")
@@ -72,6 +86,7 @@ useSeo(
         <Card v-if="project?.mainPage?.contents" class="!p-0 pb-0 overflow-clip overflow-hidden">
           <ClientOnly v-if="hasPerms(NamedPermission.EditPage)">
             <MarkdownEditor
+              class="project-page-editor"
               :editing="editingPage"
               :raw="project?.mainPage.contents"
               :deletable="false"
@@ -151,6 +166,40 @@ useSeo(
     </section>
     <aside class="space-y-4 self-start lg:sticky lg:top-4">
       <ProjectInfo :project="project" />
+      <Card v-if="projectPages.length > 0" class="!p-0 overflow-hidden">
+        <template #header>
+          <div class="flex items-center gap-2 px-4 pt-3.5 pb-1">
+            <h2>{{ i18n.t("page.plural") }}</h2>
+          </div>
+        </template>
+        <div class="px-3 pt-1 pb-3">
+          <TreeView :items="projectPages" item-key="slug" :open="openProjectPages" clazz="py-0.5" hide-toggle>
+            <template #item="{ expanded, hasChildren, item, toggle }">
+              <div
+                class="flex min-h-9 min-w-0 flex-grow items-center rounded-lg border border-transparent font-semibold transition-colors hover:border-gray-300 hover:bg-gray-100 dark:hover:border-gray-700 dark:hover:bg-gray-800"
+              >
+                <NuxtLink
+                  :to="createPageUrl(item)"
+                  class="flex min-w-0 flex-grow items-center self-stretch py-1.5 pl-3 text-current decoration-none hover:no-underline"
+                  exact-active-class="color-primary"
+                >
+                  <span class="truncate">{{ item.name }}</span>
+                </NuxtLink>
+                <button
+                  v-if="hasChildren"
+                  type="button"
+                  class="flex h-9 w-9 flex-shrink-0 items-center justify-center text-gray transition-colors hover:color-primary"
+                  :aria-label="expanded ? 'Collapse page' : 'Expand page'"
+                  @click="toggle"
+                >
+                  <IconMdiChevronDown :class="'text-lg transform transition-transform ' + (expanded ? 'rotate-0' : '-rotate-90')" />
+                </button>
+                <span v-else class="w-3 flex-shrink-0" />
+              </div>
+            </template>
+          </TreeView>
+        </div>
+      </Card>
       <Card v-if="project?.pinnedVersions?.length" class="!p-0 overflow-hidden">
         <template #header>
           <div class="flex items-center gap-2 px-4 pt-3.5 pb-1">
@@ -192,9 +241,6 @@ useSeo(
           <template #header>
             <div class="flex items-center gap-2 px-4 pt-3.5 pb-1">
               <h2 class="min-w-0 truncate">{{ section.title }}</h2>
-              <span class="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray dark:bg-charcoal-500">
-                {{ section.links.length }}
-              </span>
             </div>
           </template>
           <div class="flex flex-col gap-2 px-3 pt-1 pb-3">

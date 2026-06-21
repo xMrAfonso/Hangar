@@ -45,6 +45,7 @@ const classes = computed<string>(() => {
     ? "text-black dark:text-white disabled:cursor-not-allowed disabled:text-gray-400"
     : "text-white disabled:(bg-gray-300 cursor-not-allowed) disabled:dark:(text-gray-500 bg-charcoal-600)";
   const loading = props.loading ? "!cursor-wait" : "cursor-pointer";
+  const primaryHover = props.buttonType === "primary" ? "[&:not(:disabled):hover]:!bg-[color-mix(in_srgb,var(--primary-500)_34%,transparent)]" : "";
 
   return [
     "rounded-lg font-semibold inline-flex items-center justify-center transition-all duration-250",
@@ -53,6 +54,7 @@ const classes = computed<string>(() => {
     colors,
     paddingClass.value,
     `button-${props.buttonType}`,
+    primaryHover,
     loading,
   ].join(" ");
 });

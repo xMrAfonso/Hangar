@@ -68,6 +68,7 @@ function updatePage(newPage: number) {
 }
 
 defineSlots<{
+  "after-items"(): any;
   pagination(props: { page: number; updatePage: (newPage: number) => void; pages: number }): any;
   default(props: { item: T; idx: number; key: number }): any;
 }>();
@@ -75,6 +76,7 @@ defineSlots<{
 
 <template>
   <slot v-for="(item, idx) in slicedItems" :key="idx" :item="item" :idx="idx" />
+  <slot name="after-items" />
   <slot v-if="alwaysShow || pageCount > 1" name="pagination" :page="page" :update-page="updatePage" :pages="pageCount">
     <PaginationButtons :page="page" :pages="pageCount" @update:page="updatePage" />
   </slot>

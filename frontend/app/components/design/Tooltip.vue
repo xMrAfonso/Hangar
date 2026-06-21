@@ -1,21 +1,34 @@
 <script lang="ts" setup>
 import { Tooltip } from "floating-vue";
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     hover?: boolean;
+    click?: boolean;
     show?: boolean;
   }>(),
   {
     hover: true,
+    click: false,
     show: undefined,
   }
 );
+
+const triggers = computed(() => {
+  const values: Array<"hover" | "click"> = [];
+  if (props.hover) {
+    values.push("hover");
+  }
+  if (props.click) {
+    values.push("click");
+  }
+  return values;
+});
 </script>
 
 <template>
   <!-- hardcoding the id is meh, but else hydration breaks and it doesn't actually seem to be used for accessibility? -->
-  <Tooltip :triggers="hover ? ['hover'] : []" :delay="{ show: 200, hide: 100 }" :shown="show" aria-id="tooltip">
+  <Tooltip :triggers="triggers" :delay="{ show: 200, hide: 100 }" :shown="show" aria-id="tooltip">
     <slot />
     <template #popper>
       <slot name="content" />

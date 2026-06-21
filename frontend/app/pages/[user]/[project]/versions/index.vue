@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { HangarProject, Platform, Version } from "#shared/types/backend";
+import type { HangarChannel, HangarProject, Platform, Version } from "#shared/types/backend";
 import { NamedPermission, Visibility } from "#shared/types/backend";
 
 const i18n = useI18n();
@@ -32,7 +32,7 @@ const requestParams = computed(() => {
   };
 });
 
-const { channels } = useProjectChannels(() => route.params.project);
+const { channels, channelsStatus } = useProjectChannels(() => route.params.project);
 const { versions, versionsStatus } = useProjectVersions(
   () => ({
     project: route.params.project,
@@ -44,6 +44,40 @@ const { versions, versionsStatus } = useProjectVersions(
     },
   }),
   router
+);
+type ChannelOption = Pick<HangarChannel, "name" | "color">;
+
+const rememberedChannelOptions = shallowRef<ChannelOption[]>([]);
+const fallbackChannelOptions = computed<ChannelOption[]>(() => {
+  const channelMap = new Map<string, ChannelOption>();
+  for (const version of versions.value?.result ?? []) {
+    channelMap.set(version.channel.name, {
+      name: version.channel.name,
+      color: version.channel.color,
+    });
+  }
+  return [...channelMap.values()];
+});
+const loadedChannelOptions = computed<ChannelOption[]>(() => {
+  if (channels.value?.length) {
+    return channels.value;
+  }
+
+  if (filter.channels.length === 0) {
+    return fallbackChannelOptions.value;
+  }
+  return [];
+});
+const channelOptions = computed(() => (loadedChannelOptions.value.length > 0 ? loadedChannelOptions.value : rememberedChannelOptions.value));
+
+watch(
+  loadedChannelOptions,
+  () => {
+    if (loadedChannelOptions.value.length > 0) {
+      rememberedChannelOptions.value = loadedChannelOptions.value;
+    }
+  },
+  { immediate: true }
 );
 
 useSeo(
@@ -99,7 +133,7 @@ function getVisibilityTitle(visibility: Visibility) {
             <template #default="{ item }">
               <li
                 :class="getBorderClasses(item)"
-                class="group relative border-b border-x-0 border-t-0 transition-colors last:border-b-0 hover:background-card dark:border-gray-800"
+                class="group relative border-b border-x-0 border-t-0 transition-colors duration-250 last:border-b-0 dark:border-gray-800"
               >
                 <NuxtLink
                   :to="`/${project?.namespace?.owner}/${project?.namespace?.slug}/versions/${item.name}`"
@@ -107,7 +141,11 @@ function getVisibilityTitle(visibility: Visibility) {
                   :aria-label="`View version ${item.name}`"
                 />
                 <div
-                  class="pointer-events-none relative z-1 grid min-w-0 grid-cols-[minmax(0,1fr)_56px] items-center gap-x-3 gap-y-3 px-4 py-3 md:grid-cols-[minmax(180px,1fr)_minmax(180px,1fr)_140px_100px_56px] md:gap-4"
+                  class="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-250 group-hover:opacity-100"
+                  :style="{ background: `linear-gradient(90deg, ${item.channel.color}24, transparent 58%)` }"
+                />
+                <div
+                  class="pointer-events-none relative z-1 grid min-w-0 grid-cols-[minmax(0,1fr)_56px] items-center gap-x-3 gap-y-3 px-4 py-3.5 text-sm md:grid-cols-[minmax(180px,1fr)_minmax(180px,1fr)_140px_100px_56px] md:gap-4"
                 >
                   <div class="min-w-0">
                     <div class="flex min-w-0 items-center gap-2">
@@ -118,7 +156,7 @@ function getVisibilityTitle(visibility: Visibility) {
                       >
                         {{ item.channel.name.charAt(0) }}
                       </span>
-                      <span class="min-w-0 truncate text-base font-bold leading-tight">{{ item.name }}</span>
+                      <span class="min-w-0 truncate text-base font-semibold leading-tight">{{ item.name }}</span>
                       <IconMdiCancel v-if="item.visibility === Visibility.SoftDelete" class="flex-shrink-0" />
                       <span v-else-if="item.visibility !== Visibility.Public" class="inline-flex flex-shrink-0 items-center text-xs text-gray">
                         {{ getVisibilityTitle(item.visibility) }}
@@ -128,18 +166,18 @@ function getVisibilityTitle(visibility: Visibility) {
                   </div>
 
                   <div class="col-span-2 flex min-w-0 flex-wrap gap-1.5 md:col-span-1">
-                    <span v-for="(v, p) in item?.platformDependenciesFormatted" :key="p" class="inline-flex min-w-0 items-center gap-1.5 text-xs text-gray">
-                      <PlatformLogo :platform="p as unknown as Platform" :size="15" class="flex-shrink-0" />
+                    <span v-for="(v, p) in item?.platformDependenciesFormatted" :key="p" class="inline-flex min-w-0 items-center gap-1.5 text-sm text-gray">
+                      <PlatformLogo :platform="p as unknown as Platform" :size="18" class="flex-shrink-0" />
                       <span class="truncate">{{ v.join(", ") }}</span>
                     </span>
                   </div>
 
-                  <span class="inline-flex items-center gap-1.5 text-xs text-gray">
-                    <IconMdiCalendarOutline class="flex-shrink-0" />
+                  <span class="inline-flex items-center gap-1.5 text-sm text-gray">
+                    <IconMdiCalendarOutline class="flex-shrink-0 text-base" />
                     {{ i18n.d(item.createdAt, "date") }}
                   </span>
-                  <span class="inline-flex items-center gap-1.5 text-xs text-gray">
-                    <IconMdiDownloadOutline class="flex-shrink-0" />
+                  <span class="inline-flex items-center gap-1.5 text-sm text-gray">
+                    <IconMdiDownloadOutline class="flex-shrink-0 text-base" />
                     {{ item.stats.totalDownloads.toLocaleString("en-US") }}
                   </span>
                   <div class="pointer-events-auto col-start-2 row-start-1 flex justify-end md:col-start-auto md:row-start-auto">
@@ -196,8 +234,12 @@ function getVisibilityTitle(visibility: Visibility) {
           </div>
         </template>
 
-        <ul class="space-y-1 px-2 pt-1 pb-2">
-          <li v-for="channel in channels" :key="channel.name">
+        <div v-if="channelOptions.length === 0 && (channelsStatus === 'loading' || versionsStatus === 'loading')" class="px-3 pt-1 pb-3">
+          <Skeleton class="h-18" delay />
+        </div>
+        <div v-else-if="channelOptions.length === 0" class="px-3 pt-1 pb-3 text-sm text-gray">No channels available.</div>
+        <ul v-else class="space-y-1 px-2 pt-1 pb-2">
+          <li v-for="channel in channelOptions" :key="channel.name">
             <InputCheckbox v-model="filter.channels" :value="channel.name">
               <span class="ml-3 h-3 w-3 flex-shrink-0 rounded-full" :style="{ backgroundColor: channel.color }" />
               <span class="ml-2 min-w-0 truncate font-semibold">{{ channel.name }}</span>

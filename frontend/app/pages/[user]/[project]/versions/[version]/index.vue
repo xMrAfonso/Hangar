@@ -172,25 +172,26 @@ async function restoreVersion() {
 <template>
   <div v-if="version" class="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
     <section class="min-w-0 space-y-4">
-      <Card class="!p-4 overflow-visible">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <Card class="relative !p-0 overflow-hidden">
+        <div class="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
-              <Tag :name="version.channel.name" :color="{ background: version.channel.color }" :tooltip="version.channel.description" />
+              <span
+                class="background-default inline-flex min-h-7 max-w-full items-center rounded-md border px-2.5 py-1 text-sm font-semibold"
+                :style="{ borderColor: version.channel.color, color: version.channel.color }"
+                :title="version.channel.description || version.channel.name"
+              >
+                {{ version.channel.name }}
+              </span>
               <span v-if="version.visibility !== Visibility.Public" class="inline-flex items-center gap-1 text-sm text-gray">
                 <IconMdiEyeOff />
                 {{ visibilityLabel }}
               </span>
             </div>
             <h1 class="mt-2 break-words text-2xl font-bold sm:text-3xl">{{ version.name }}</h1>
-            <p class="mt-1 text-sm text-gray">
-              Released by
-              <NuxtLink :to="`/${version.author}`" class="color-primary hover:underline">{{ version.author }}</NuxtLink>
-              {{ lastUpdated(new Date(version.createdAt)) }}
-            </p>
           </div>
           <div class="flex flex-shrink-0 items-center gap-2">
-            <Tooltip v-if="confirmationWarningKey">
+            <Tooltip v-if="confirmationWarningKey" click>
               <template #content>
                 {{
                   confirmationWarningKey === "version.page.unsafeWarningExternal"
@@ -213,9 +214,7 @@ async function restoreVersion() {
             />
           </div>
         </div>
-      </Card>
-
-      <Card class="relative !p-0 overflow-hidden">
+        <hr class="mx-4 border-gray-200 dark:border-gray-800" />
         <ClientOnly v-if="hasPerms(NamedPermission.EditVersion)">
           <MarkdownEditor
             v-model:editing="editingPage"
@@ -335,7 +334,7 @@ async function restoreVersion() {
               <li v-for="dep in sortedDependencies(platform)" :key="dep.name" class="flex items-center gap-2 py-1 text-sm">
                 <IconMdiLinkVariant class="flex-shrink-0 text-gray" />
                 <Link
-                  :href="dep.externalUrl || '/api/internal/projects/project-redirect/' + dep.name"
+                  :href="dep.externalUrl ? linkout(dep.externalUrl) : '/api/internal/projects/project-redirect/' + dep.name"
                   :target="dep.externalUrl ? '_blank' : undefined"
                   class="min-w-0 flex-grow truncate font-semibold"
                 >

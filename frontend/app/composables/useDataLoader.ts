@@ -46,11 +46,11 @@ export function useDataLoader<K extends keyof DataLoaderTypes>(key: K) {
               else reject(err);
             });
             // await new Promise((resolve) => setTimeout(resolve, 5000));
-            if (result) {
+            if (result !== undefined && result !== null) {
               data.value = result;
               console.log("load loaded", key, newParam);
-              resolve();
             }
+            resolve();
           })
         );
         return newParam;

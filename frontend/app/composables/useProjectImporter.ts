@@ -12,16 +12,53 @@ export interface SpigotAuthor {
 
 export interface SpigotResource {
   id: string;
+  resource_id?: string;
+  resourceId?: string;
   title: string;
+  name?: string;
   tag: string;
   current_version: string;
-  category: { title: string; id: string };
+  version?: { id: string; name?: string };
+  category: { title?: string; name?: string; id: string };
   native_minecraft_version: string;
+  testedVersions?: string[];
   supported_minecraft_versions: string[];
   icon_link: string;
-  premium: { price: string };
+  icon?: { url?: string; data?: string };
+  premium: boolean | { price?: string };
   description: string;
+  downloads?: number;
+  likes?: number;
+  rating?: { count?: number; average?: number };
+  updateDate?: number;
   external_download_url?: string;
+}
+
+export function getSpigotResourceId(resource: SpigotResource) {
+  return String(resource.id ?? resource.resource_id ?? resource.resourceId ?? "");
+}
+
+export function getSpigotResourceTitle(resource: SpigotResource) {
+  return resource.title || resource.name || `Resource #${getSpigotResourceId(resource)}`;
+}
+
+export function getSpigotResourceIcon(resource: SpigotResource) {
+  return resource.icon_link || resource.icon?.url || resource.icon?.data || undefined;
+}
+
+export function getSpigotResourceVersion(resource: SpigotResource) {
+  return resource.current_version || resource.version?.name || (resource.version?.id ? `Version #${resource.version.id}` : undefined);
+}
+
+export function getSpigotResourceCategory(resource: SpigotResource) {
+  return resource.category?.title || resource.category?.name;
+}
+
+export function getSpigotResourcePrice(resource: SpigotResource) {
+  if (typeof resource.premium === "object") {
+    return resource.premium.price ? `$${resource.premium.price}` : "Premium";
+  }
+  return resource.premium ? "Premium" : undefined;
 }
 
 export async function getAllSpigotResourcesByAuthor(authorId: string) {
@@ -90,6 +127,7 @@ const unspecifiedLicenseName = "Unspecified";
 export async function convertSpigotProjects(spigotResources: SpigotResource[], ownerId: number) {
   const hangarResources = [] as ImportedProject[];
   for (const spigotResource of spigotResources) {
+    const resourceTitle = getSpigotResourceTitle(spigotResource);
     const hangarResource = {
       ownerId,
       settings: {
@@ -99,21 +137,21 @@ export async function convertSpigotProjects(spigotResources: SpigotResource[], o
         links: [],
         tags: [],
       } as unknown as ImportedProject["settings"],
-      externalId: spigotResource.id,
-      name: spigotResource.title,
-      description: spigotResource.tag,
-      avatarUrl: spigotResource.icon_link,
+      externalId: getSpigotResourceId(spigotResource),
+      name: resourceTitle,
+      description: spigotResource.tag || resourceTitle,
+      avatarUrl: getSpigotResourceIcon(spigotResource),
       util: {},
     } as ImportedProject;
     try {
       hangarResource.pageContent = await useInternalApi<string>("pages/convert-bbcode", "post", {
-        content: spigotResource.description,
+        content: spigotResource.description || spigotResource.tag || "",
       });
     } catch (err) {
       console.log("failed to convert", hangarResource, err);
     }
 
-    hangarResource.category = categoryMapping[spigotResource.category.id] || Category.Undefined;
+    hangarResource.category = categoryMapping[spigotResource.category?.id] || Category.Undefined;
 
     hangarResource.settings.license.type = unspecifiedLicenseName;
     hangarResource.util.isCustomLicense = computed(() => hangarResource.settings.license.type === "Other");

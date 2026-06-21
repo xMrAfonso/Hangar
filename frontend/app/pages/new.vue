@@ -2,7 +2,7 @@
 import type { Step } from "#shared/types/components/design/Steps";
 import { Category, Tag } from "#shared/types/backend";
 import type { NewProjectForm, ProjectSettingsForm } from "#shared/types/backend";
-import { guidelinesLastUpdated } from "~/pages/guidelines.vue";
+import { guidelinesLastUpdated } from "~/content/guidelines";
 
 definePageMeta({
   loginRequired: true,
@@ -37,20 +37,6 @@ const unspecifiedLicenseName = "Unspecified";
 form.value.settings.license.type = unspecifiedLicenseName;
 const isCustomLicense = computed(() => form.value.settings.license.type === "Other");
 const licenseUnset = computed(() => form.value.settings.license.type === unspecifiedLicenseName);
-const selectedOwner = computed(() => projectOwners.value.find((owner) => owner.id === form.value.ownerId));
-const selectedCategory = computed(() => useCategoryOptions.value.find((option) => option.value === form.value.category));
-
-function selectOwner(ownerId: number) {
-  form.value.ownerId = ownerId;
-}
-
-function selectCategory(category: string) {
-  form.value.category = category as Category;
-}
-
-function selectLicense(license: string) {
-  form.value.settings.license.type = license;
-}
 
 const selectedStep = ref("tos");
 const steps: Step[] = [
@@ -147,7 +133,7 @@ function createProject() {
           </div>
 
           <Link
-            to="/guidelines"
+            to="/support/guidelines"
             class="group mt-5 flex max-w-2xl items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800"
           >
             <IconMdiFileDocumentOutline class="flex-shrink-0 text-lg text-gray" />
@@ -191,31 +177,7 @@ function createProject() {
               <label class="text-sm font-semibold">{{ i18n.t("project.new.step2.projectName") }}</label>
 
               <div class="h-11">
-                <DropdownButton button-size="medium" button-type="transparent" button-class="!h-11 !py-2" match-width spread-arrow>
-                  <template #button-label>
-                    <span class="w-full truncate text-left">{{ selectedOwner?.name || i18n.t("project.new.step2.userSelect") }}</span>
-                  </template>
-                  <template #default="{ close }">
-                    <DropdownItem
-                      v-for="owner in projectOwners"
-                      :key="owner.id"
-                      :style="
-                        form.ownerId === owner.id
-                          ? {
-                              backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
-                              borderColor: 'var(--primary-500)',
-                            }
-                          : {}
-                      "
-                      @click="
-                        selectOwner(owner.id);
-                        close();
-                      "
-                    >
-                      {{ owner.name }}
-                    </DropdownItem>
-                  </template>
-                </DropdownButton>
+                <DropdownSelect v-model="form.ownerId" :values="projectOwners" item-value="id" item-text="name" button-class="!h-11 !py-2" />
               </div>
               <span class="hidden h-11 items-center text-2xl text-gray sm:flex">/</span>
               <div class="h-11 [&>div>label]:!h-11 [&>div>label]:!py-0">
@@ -241,31 +203,14 @@ function createProject() {
               <h2 class="text-lg font-bold">Classification</h2>
               <p class="mt-1 text-sm text-gray">Select the category that best describes the project.</p>
             </div>
-            <DropdownButton button-size="medium" button-type="transparent" button-class="!h-11 !py-2" match-width spread-arrow>
-              <template #button-label>
-                <span class="w-full truncate text-left">{{ selectedCategory ? i18n.t(selectedCategory.text) : form.category }}</span>
-              </template>
-              <template #default="{ close }">
-                <DropdownItem
-                  v-for="category in useCategoryOptions"
-                  :key="category.value"
-                  :style="
-                    form.category === category.value
-                      ? {
-                          backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
-                          borderColor: 'var(--primary-500)',
-                        }
-                      : {}
-                  "
-                  @click="
-                    selectCategory(category.value);
-                    close();
-                  "
-                >
-                  {{ i18n.t(category.text) }}
-                </DropdownItem>
-              </template>
-            </DropdownButton>
+            <DropdownSelect
+              v-model="form.category"
+              :values="useCategoryOptions"
+              item-value="value"
+              item-text="text"
+              button-class="!h-11 !py-2"
+              i18n-text-values
+            />
           </section>
         </div>
 
@@ -352,31 +297,7 @@ function createProject() {
               <p class="mt-1 text-sm text-gray">{{ i18n.t("project.settings.licenseSub") }}</p>
               <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(10rem,1fr)_minmax(0,2fr)]">
                 <div>
-                  <DropdownButton button-size="medium" button-type="transparent" button-class="!h-10.5 !py-2" match-width spread-arrow>
-                    <template #button-label>
-                      <span class="w-full truncate text-left">{{ form.settings.license.type }}</span>
-                    </template>
-                    <template #default="{ close }">
-                      <DropdownItem
-                        v-for="license in useLicenseOptions"
-                        :key="license.value"
-                        :style="
-                          form.settings.license.type === license.value
-                            ? {
-                                backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
-                                borderColor: 'var(--primary-500)',
-                              }
-                            : {}
-                        "
-                        @click="
-                          selectLicense(license.value);
-                          close();
-                        "
-                      >
-                        {{ license.text }}
-                      </DropdownItem>
-                    </template>
-                  </DropdownButton>
+                  <DropdownSelect v-model="form.settings.license.type" :values="useLicenseOptions" item-value="value" item-text="text" />
                 </div>
                 <InputText
                   v-if="isCustomLicense"

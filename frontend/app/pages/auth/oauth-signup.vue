@@ -53,34 +53,36 @@ useSeo(computed(() => ({ title: "OAuth Signup", route })));
 </script>
 
 <template>
-  <Card class="w-xl mx-auto max-w-full">
-    <template #header>
-      <h1>OAuth Sign up</h1>
-    </template>
+  <main class="flex min-h-[70vh] w-full items-center justify-center px-4 py-10">
+    <Card class="w-full max-w-xl">
+      <template #header>
+        <h1>OAuth Sign up</h1>
+      </template>
 
-    <form v-if="!done" class="flex flex-col gap-2">
-      <InputText v-model="form.username" label="Username" name="username" autocomplete="username" :rules="[required()]" />
-      <InputText v-model="form.email" type="email" label="E-Mail" name="email" autocomplete="email" :rules="[required(), email()]" />
-      <div v-if="errorMessage" class="c-red">{{ errorMessage }}</div>
-      <div class="w-max">
-        <InputGroup v-model="form.tos" :rules="[sameAs('You need to accept the Terms and Conditions')(true)]" :silent-errors="false" full-width>
-          <InputCheckbox v-model="form.tos">
-            <template #label>I agree to the&nbsp;<Link to="/terms">Terms and Conditions</Link></template>
-          </InputCheckbox>
-        </InputGroup>
-      </div>
-      <div>
-        <Button type="submit" :disabled="loading" @click.prevent="submit">Sign up using {{ data.provider }} account {{ data.username }}</Button>
-      </div>
-      <Link to="login">Login with existing account</Link>
-    </form>
+      <form v-if="!done" class="flex flex-col gap-2">
+        <InputText v-model="form.username" label="Username" name="username" autocomplete="username" :rules="[required()]" />
+        <InputText v-model="form.email" type="email" label="E-Mail" name="email" autocomplete="email" :rules="[required(), email()]" />
+        <div v-if="errorMessage" class="c-red">{{ errorMessage }}</div>
+        <div class="w-max">
+          <InputGroup v-model="form.tos" :rules="[sameAs('You need to accept the Terms and Conditions')(true)]" :silent-errors="false" full-width>
+            <InputCheckbox v-model="form.tos">
+              <template #label>I agree to the&nbsp;<Link to="/support/tos">Terms and Conditions</Link></template>
+            </InputCheckbox>
+          </InputGroup>
+        </div>
+        <div>
+          <Button type="submit" :disabled="loading" @click.prevent="submit">Sign up using {{ data.provider }} account {{ data.username }}</Button>
+        </div>
+        <Link to="login">Login with existing account</Link>
+      </form>
 
-    <div v-if="done" class="flex flex-col gap-2">
-      <p>Your account has been created! <template v-if="emailVerificationNeeded">Please check your emails to complete the signup process.</template></p>
-      <div class="flex gap-2">
-        <Button v-if="data.returnUrl" :to="data.returnUrl">Back to last page</Button>
-        <Button to="/auth/settings/account">Go to account settings</Button>
+      <div v-if="done" class="flex flex-col gap-2">
+        <p>Your account has been created! <template v-if="emailVerificationNeeded">Please check your emails to complete the signup process.</template></p>
+        <div class="flex gap-2">
+          <Button v-if="data.returnUrl" :to="data.returnUrl">Back to last page</Button>
+          <Button to="/auth/settings/account">Go to account settings</Button>
+        </div>
       </div>
-    </div>
-  </Card>
+    </Card>
+  </main>
 </template>

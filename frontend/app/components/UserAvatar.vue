@@ -10,6 +10,7 @@ const props = withDefaults(
     size?: "xs" | "sm" | "md" | "lg" | "xl";
     disableLink?: boolean;
     loading?: boolean;
+    decorative?: boolean;
   }>(),
   {
     username: undefined,
@@ -19,6 +20,7 @@ const props = withDefaults(
     to: "",
     disableLink: false,
     loading: false,
+    decorative: false,
   }
 );
 
@@ -71,7 +73,14 @@ const url = computed(() => {
   <div :class="'rounded-lg ' + sizeClass">
     <component :is="disableLink ? 'span' : NuxtLink" :key="url" :to="url">
       <Skeleton v-if="loading" class="rounded-lg w-full h-full" />
-      <img v-else class="rounded-lg w-full h-full" :title="username" :src="src" :alt="'Avatar for ' + username" @error="errored = true" />
+      <img
+        v-else
+        class="rounded-lg w-full h-full"
+        :title="decorative ? undefined : username"
+        :src="src"
+        :alt="decorative ? '' : 'Avatar for ' + username"
+        @error="errored = true"
+      />
     </component>
   </div>
 </template>

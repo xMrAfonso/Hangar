@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NamedPermission } from "#shared/types/backend";
-import type { HangarProject, HangarProjectPage } from "#shared/types/backend";
+import type { HangarProject } from "#shared/types/backend";
 
 const props = defineProps<{
   project?: HangarProject;
@@ -9,22 +9,6 @@ const i18n = useI18n();
 const route = useRoute();
 const inSettings = computed(() => route.path.includes("/settings"));
 const activeProjectTab = computed(() => route.path.split("/")[3] || "overview");
-const activeSettingsTab = computed(() => {
-  const settingsIndex = route.path.split("/").indexOf("settings");
-  return route.path.split("/")[settingsIndex + 1] || "general";
-});
-const settingsTabs = computed(() => {
-  const tabs = [
-    { value: "general", title: i18n.t("project.settings.tabs.general") },
-    { value: "links", title: i18n.t("project.settings.tabs.links") },
-    { value: "banners", title: i18n.t("project.settings.tabs.banners") },
-    { value: "members", title: "Members" },
-  ];
-  if (hasPerms(NamedPermission.IsSubjectOwner) || hasPerms(NamedPermission.DeleteProject) || hasPerms(NamedPermission.HardDeleteProject)) {
-    tabs.push({ value: "management", title: i18n.t("project.settings.tabs.management") });
-  }
-  return tabs;
-});
 
 const slug = computed(() => {
   if (props.project) return props.project.namespace.owner + "/" + props.project.namespace.slug;
@@ -35,12 +19,7 @@ function childRoute(route = ""): string {
   return `/${slug.value}${route}`;
 }
 
-function flattenPages(pages: HangarProjectPage[] = []): HangarProjectPage[] {
-  return pages.flatMap((page) => [page, ...flattenPages(page.children)]);
-}
-
-const projectPages = computed(() => flattenPages(props.project?.pages).filter((page) => !page.home));
-const externalLinks = computed(() => props.project?.settings?.links.flatMap((section) => section.links) ?? []);
+const externalLinks = computed(() => props.project?.settings?.links.filter((section) => section.type === "top").flatMap((section) => section.links) ?? []);
 const tableOfContents = computed(
   () =>
     parseMarkdown(props.project?.mainPage?.contents)
@@ -75,7 +54,7 @@ onMounted(() => {
   onBeforeUnmount(() => resizeObserver.disconnect());
 });
 
-watch([projectPages, externalLinks], () => nextTick(updateFades));
+watch(externalLinks, () => nextTick(updateFades));
 </script>
 
 <template>
@@ -124,16 +103,6 @@ watch([projectPages, externalLinks], () => nextTick(updateFades));
           {{ i18n.t("project.tabs.versions") }}
         </ProjectNavItem>
         <ProjectNavItem
-          v-for="page in projectPages"
-          :key="page.id"
-          :to="childRoute(`/pages/${page.slug}`)"
-          :title="page.name"
-          :active="activeProjectTab === 'pages' && route.path.split('/')[4] === page.slug"
-          compact
-        >
-          {{ page.name }}
-        </ProjectNavItem>
-        <ProjectNavItem
           v-if="hasPerms(NamedPermission.EditChannels)"
           :to="childRoute('/channels')"
           :title="i18n.t('project.tabs.channels')"
@@ -155,25 +124,7 @@ watch([projectPages, externalLinks], () => nextTick(updateFades));
     </div>
 
     <div
-      v-if="inSettings"
-      class="nav-group background-default relative min-w-0 max-w-full flex-[0_1_auto] overflow-hidden rounded-lg border dark:border-gray-800"
-    >
-      <div class="flex max-w-full items-center gap-1 overflow-x-auto whitespace-nowrap p-1">
-        <ProjectNavItem
-          v-for="tab in settingsTabs"
-          :key="tab.value"
-          :to="childRoute(`/settings/${tab.value}`)"
-          :title="tab.title"
-          :active="activeSettingsTab === tab.value"
-          compact
-        >
-          {{ tab.title }}
-        </ProjectNavItem>
-      </div>
-    </div>
-
-    <div
-      v-if="!inSettings && externalLinks.length > 0"
+      v-if="externalLinks.length > 0"
       class="nav-group background-default relative min-w-0 max-w-full flex-[0_1_auto] overflow-hidden rounded-lg border dark:border-gray-800"
       :class="externalFade"
     >

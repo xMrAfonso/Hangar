@@ -2,7 +2,6 @@
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/vue";
 
 import type { RouteLocationRaw } from "vue-router";
-import type { RouteNamedMap } from "vue-router/auto-routes";
 import hangarLogo from "~/assets/hangar-logo.svg";
 
 import IconMdiHome from "~icons/mdi/home";
@@ -50,29 +49,29 @@ const hasProfileAdminLinks = computed(
     hasPerms(NamedPermission.EditAllUserSettings)
 );
 
-type NavBarLinks = { link: keyof RouteNamedMap; label: string; icon?: any }[];
+type NavBarLinks = { link: RouteLocationRaw; label: string; icon?: any }[];
 
 const navBarLinks: NavBarLinks = [
-  { link: "index", label: t("nav.indexTitle") },
-  { link: "users", label: "Users" },
+  { link: { name: "index" }, label: t("nav.indexTitle") },
+  { link: { name: "users" }, label: "Users" },
 ];
 
 const navBarMenuLinksHangar: NavBarLinks = [
-  { link: "index", label: t("general.home"), icon: IconMdiHome },
-  { link: "guidelines", label: t("guidelines.title"), icon: IconMdiFileDocumentAlert },
-  { link: "new", label: t("nav.links.createProject"), icon: IconMdiFolderPlusOutline },
-  { link: "neworganization", label: t("nav.links.createOrganization"), icon: IconMdiFolderPlusOutline },
-  { link: "users", label: "Users", icon: IconMdiAccountGroup },
+  { link: { name: "index" }, label: t("general.home"), icon: IconMdiHome },
+  { link: "/support/guidelines", label: t("guidelines.title"), icon: IconMdiFileDocumentAlert },
+  { link: { name: "new" }, label: t("nav.links.createProject"), icon: IconMdiFolderPlusOutline },
+  { link: { name: "neworganization" }, label: t("nav.links.createOrganization"), icon: IconMdiFolderPlusOutline },
+  { link: { name: "users" }, label: "Users", icon: IconMdiAccountGroup },
 ];
 if (!authStore.user) {
   navBarMenuLinksHangar.splice(2, 2);
 }
 
 const navBarMenuLinksTools: NavBarLinks = [
-  { link: "tools-importer", label: t("nav.tools.importer"), icon: IconMdiFolderPlusOutline },
-  { link: "tools-bbcode", label: t("nav.tools.bbcode"), icon: IconMdiFolderWrenchOutline },
-  { link: "tools-markdown", label: t("nav.tools.markdown"), icon: IconMdiFolderWrenchOutline },
-  { link: "version", label: t("nav.tools.version"), icon: IconMdiFolderInformationOutline },
+  { link: { name: "tools-importer" }, label: t("nav.tools.importer"), icon: IconMdiFolderPlusOutline },
+  { link: { name: "tools-bbcode" }, label: t("nav.tools.bbcode"), icon: IconMdiFolderWrenchOutline },
+  { link: { name: "tools-markdown" }, label: t("nav.tools.markdown"), icon: IconMdiFolderWrenchOutline },
+  { link: "/support/about", label: t("nav.tools.version"), icon: IconMdiFolderInformationOutline },
 ];
 
 const auth = useAuth;
@@ -164,7 +163,7 @@ function isRecent(date: string): boolean {
               <NuxtLink
                 v-for="link in navBarMenuLinksHangar"
                 :key="link.label"
-                :to="{ name: link.link } as RouteLocationRaw"
+                :to="link.link"
                 class="flex items-center rounded-md px-6 py-2"
                 hover="text-primary-500 bg-primary-0"
                 v-on="useTracking('nav-burger-link', { link: link.link })"
@@ -180,7 +179,7 @@ function isRecent(date: string): boolean {
               <NuxtLink
                 v-for="link in navBarMenuLinksTools"
                 :key="link.label"
-                :to="{ name: link.link } as RouteLocationRaw"
+                :to="link.link"
                 class="flex items-center rounded-md px-6 py-2"
                 hover="text-primary-500 bg-primary-0"
                 v-on="useTracking('nav-burger-link', { link: link.link })"
@@ -217,9 +216,8 @@ function isRecent(date: string): boolean {
           <NuxtLink
             v-for="navBarLink in navBarLinks"
             :key="navBarLink.label"
-            :to="{ name: navBarLink.link } as RouteLocationRaw"
-            class="header-link relative"
-            after="absolute content-empty block w-0 top-30px left-1/10 h-4px rounded-8px"
+            :to="navBarLink.link"
+            class="header-link relative select-none"
             v-on="useTracking('nav-desktop-link', { link: navBarLink.link })"
           >
             {{ navBarLink.label }}
@@ -244,7 +242,7 @@ function isRecent(date: string): boolean {
       />
       -->
       <!-- Right side items -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1">
         <div v-if="authStore.user" class="flex items-center lt-sm:hidden">
           <DropdownButton
             button-type="borderless"
@@ -266,6 +264,7 @@ function isRecent(date: string): boolean {
         <Button
           button-type="borderless"
           size="medium"
+          class="!h-10.5 !w-10.5 !p-0"
           aria-label="Toggle dark mode"
           @click="settings.toggleDarkMode()"
           v-on="useTracking('nav-theme', { darkMode: settings.darkMode })"
@@ -278,6 +277,7 @@ function isRecent(date: string): boolean {
             <Button
               button-type="borderless"
               size="medium"
+              class="!h-10.5 !w-10.5 !p-0"
               aria-label="Notifications"
               @click="updateNotifications"
               v-on="useTracking('nav-notifications', () => ({ unread: unreadCount ? unreadCount.notifications + unreadCount.invites : -1 }))"
@@ -354,12 +354,12 @@ function isRecent(date: string): boolean {
           </Popper>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="-ml-2 flex items-center gap-1">
         <!-- Profile dropdown -->
         <div v-if="authStore.user">
           <DropdownButton
             button-type="borderless"
-            button-class="!h-12 !w-12 min-w-0 !p-1.5 !space-x-0"
+            button-class="!h-10.5 !w-10.5 min-w-0 !p-1 !space-x-0"
             :button-arrow="false"
             name="Profile"
             @click="updateNavData"
@@ -371,6 +371,10 @@ function isRecent(date: string): boolean {
             </template>
             <template #default="{ close }">
               <div class="flex min-w-48 flex-col" @click="close()">
+                <div class="max-w-56 truncate px-2 py-1 font-semibold text-gray-600 dark:text-gray-300">
+                  {{ authStore.user.name }}
+                </div>
+                <div class="mx-1 my-1 border-t border-zinc-200 dark:border-zinc-700" />
                 <DropdownItem :to="'/' + authStore.user.name">{{ t("nav.user.profile") }}</DropdownItem>
                 <DropdownItem to="/notifications">{{ t("nav.user.notifications") }}</DropdownItem>
                 <DropdownItem to="/auth/settings/profile">{{ t("nav.user.settings") }}</DropdownItem>
@@ -403,45 +407,44 @@ function isRecent(date: string): boolean {
           </DropdownButton>
         </div>
 
-        <!-- Login/register buttons -->
-        <div v-else class="flex gap-2">
-          <NuxtLink
-            class="flex items-center rounded-md p-2 hover:(text-primary-500 bg-primary-0 dark:(text-white bg-zinc-700))"
-            :to="auth.loginUrl(route.fullPath)"
-            rel="nofollow"
-          >
-            <icon-mdi-key-outline class="mr-1 flex-shrink-0 text-[1.2em]" />
-            {{ t("nav.login") }}
-          </NuxtLink>
-          <NuxtLink
-            class="flex items-center rounded-md p-2 hover:(text-primary-500 bg-primary-0 dark:(text-white bg-zinc-700))"
-            :to="auth.signupUrl(route.fullPath)"
-          >
-            <icon-mdi-clipboard-outline class="mr-1 flex-shrink-0 text-[1.2em]" />
-            {{ t("nav.signup") }}
-          </NuxtLink>
-        </div>
+        <!-- Login button -->
+        <Button v-else size="medium" :to="auth.loginUrl(route.fullPath)" rel="nofollow" v-on="useTracking('nav-login')">
+          <span class="mx-1">{{ t("nav.login") }}</span>
+        </Button>
       </div>
     </nav>
   </header>
 </template>
 
 <style lang="css" scoped>
-nav .router-link-active {
+nav .router-link-active:not(.button-primary) {
   @apply color-primary;
   font-weight: 700;
 }
 
-.header-link.router-link-active:after {
-  content: "";
+.header-link.router-link-active::after {
   background: linear-gradient(-270deg, var(--primary-500) 0%, var(--primary-400) 100%);
-  transition: width 0.2s ease-in;
-  width: 80%;
+  transform: scaleX(1);
 }
 
-.header-link:not(.router-link-active):hover:after {
-  background: #d3e1f6;
-  transition: width 0.2s ease-in;
+.header-link::after {
+  content: "";
+  position: absolute;
+  top: 24px;
+  left: 10%;
+  display: block;
+  height: 4px;
   width: 80%;
+  border-radius: 8px;
+  background: #d3e1f6;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition:
+    transform 0.2s ease-in-out,
+    background-color 0.2s ease-in-out;
+}
+
+.header-link:not(.router-link-active):hover::after {
+  transform: scaleX(1);
 }
 </style>

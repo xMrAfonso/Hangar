@@ -10,48 +10,49 @@ defineProps<{
 const i18n = useI18n();
 const route = useRoute("user-project");
 
-function countPages(pages: HangarProject["pages"] = []): number {
-  return pages.reduce((count, page) => count + 1 + countPages(page.children), 0);
+function pageUrl(page: HangarProject["pages"][number]): string {
+  if (page.home) {
+    return `/${route.params.user}/${route.params.project}`;
+  }
+  return `/${route.params.user}/${route.params.project}/pages/${page.slug}`;
 }
 </script>
 
 <template>
   <Card class="!p-0 overflow-hidden">
     <template #header>
-      <div class="flex w-full items-center gap-2 px-4 pt-3.5 pb-2.5">
-        <IconMdiFileTreeOutline class="color-primary" />
+      <div class="flex w-full items-center gap-2 border-b border-gray-200 px-4 py-3 dark:border-gray-800">
         <h2>{{ i18n.t("page.plural") }}</h2>
-        <span v-if="project" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray dark:bg-charcoal-500">
-          {{ countPages(project.pages) }}
-        </span>
         <div class="flex-grow" />
         <NewPageModal v-if="project && hasPerms(NamedPermission.EditPage)" :pages="project.pages" :project-id="project.id" />
       </div>
     </template>
 
-    <div class="border-t p-3 dark:border-gray-800">
-      <div v-if="project" class="rounded-lg border border-gray-200 bg-gray-100/60 px-2 py-1.5 dark:border-gray-800 dark:bg-charcoal-500/60">
-        <TreeView :items="project.pages" item-key="slug" :open="open" clazz="py-1">
-          <template #item="{ item }">
-            <Link
-              v-if="item.home"
-              :to="`/${route.params.user}/${route.params.project}`"
-              exact
-              class="inline-flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1"
-              active-underline
+    <div class="px-3 py-3">
+      <div v-if="project">
+        <TreeView :items="project.pages" item-key="slug" :open="open" clazz="py-0.5" hide-toggle>
+          <template #item="{ expanded, hasChildren, item, toggle }">
+            <div
+              class="flex min-h-9 min-w-0 flex-grow items-center rounded-lg border border-transparent font-semibold transition-colors hover:border-gray-300 hover:bg-gray-100 dark:hover:border-gray-700 dark:hover:bg-gray-800"
             >
-              <IconMdiHomeOutline class="flex-shrink-0 color-primary" />
-              <span class="truncate">{{ item.name }}</span>
-            </Link>
-            <Link
-              v-else
-              :to="`/${route.params.user}/${route.params.project}/pages/${item.slug}`"
-              exact
-              class="min-w-0 truncate rounded-md px-1.5 py-1"
-              active-underline
-            >
-              {{ item.name }}
-            </Link>
+              <NuxtLink
+                :to="pageUrl(item)"
+                class="flex min-w-0 flex-grow items-center self-stretch py-1.5 pl-3 text-current decoration-none hover:no-underline"
+                exact-active-class="color-primary"
+              >
+                <span class="truncate">{{ item.name }}</span>
+              </NuxtLink>
+              <button
+                v-if="hasChildren"
+                type="button"
+                class="flex h-9 w-9 flex-shrink-0 items-center justify-center text-gray transition-colors hover:color-primary"
+                :aria-label="expanded ? 'Collapse page' : 'Expand page'"
+                @click="toggle"
+              >
+                <IconMdiChevronDown :class="'text-lg transform transition-transform ' + (expanded ? 'rotate-0' : '-rotate-90')" />
+              </button>
+              <span v-else class="w-3 flex-shrink-0" />
+            </div>
           </template>
         </TreeView>
       </div>

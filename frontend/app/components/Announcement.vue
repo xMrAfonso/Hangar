@@ -7,5 +7,9 @@ const { announcement } = toRefs(props);
 
 <template>
   <!-- eslint-disable-next-line vue/no-v-html -->
-  <div :style="'background-color:' + announcement.color + '60; border-color:' + announcement.color" class="py-2 px-20 text-center text-black dark:text-white rounded-2xl border-1" v-html="useDomPurify(announcement.text)" />
+  <div
+    :style="'background-color:' + announcement.color + '60; border-color:' + announcement.color"
+    class="rounded-xl border px-4 py-2.5 text-center text-black dark:text-white"
+    v-html="useDomPurify(announcement.text)"
+  />
 </template>

@@ -49,27 +49,29 @@ useSeo(computed(() => ({ title: "Reset your password", route })));
 </script>
 
 <template>
-  <Card class="w-xl mx-auto max-w-full">
-    <template #header> Reset your password </template>
-    <form v-if="!codeSend" class="flex flex-col gap-2">
-      <p>Enter your email address here to receive a verification code to reset your password.</p>
-      <InputText v-model="email" type="email" label="Email" name="email" autocomplete="email" :rules="[required(), emailRule()]" />
-      <Button class="w-max" @click.prevent="sendCode">Send code</Button>
-    </form>
-    <form v-else-if="!codeVerified" class="flex flex-col gap-2">
-      <p>Please enter the code you received via email</p>
-      <InputText v-model="code" type="text" inputmode="numeric" pattern="[0-9]" label="Verification code" :rules="[required()]" :error-messages="codeError" />
-      <Button class="w-max" @click.prevent="verifyCode">Verify Code</Button>
-    </form>
-    <form v-else-if="!passwordUpdated" class="flex flex-col gap-2">
-      <p>Enter your new password</p>
-      <input id="email" v-model="email" type="hidden" name="email" />
-      <InputPassword v-model="password" label="New password" name="new-password" autocomplete="new-password" :rules="[required()]" />
-      <Button class="w-max" @click.prevent="sendNewPassword">Update password</Button>
-    </form>
-    <div v-else class="flex flex-col gap-2">
-      <p>Password updated!</p>
-      <Button class="w-max" @click="gotoLogin">Go to Login</Button>
-    </div>
-  </Card>
+  <main class="flex min-h-[70vh] w-full items-center justify-center px-4 py-10">
+    <Card class="w-full max-w-xl">
+      <template #header> Reset your password </template>
+      <form v-if="!codeSend" class="flex flex-col gap-2">
+        <p>Enter your email address here to receive a verification code to reset your password.</p>
+        <InputText v-model="email" type="email" label="Email" name="email" autocomplete="email" :rules="[required(), emailRule()]" />
+        <Button class="w-max" @click.prevent="sendCode">Send code</Button>
+      </form>
+      <form v-else-if="!codeVerified" class="flex flex-col gap-2">
+        <p>Please enter the code you received via email</p>
+        <InputText v-model="code" type="text" inputmode="numeric" pattern="[0-9]" label="Verification code" :rules="[required()]" :error-messages="codeError" />
+        <Button class="w-max" @click.prevent="verifyCode">Verify Code</Button>
+      </form>
+      <form v-else-if="!passwordUpdated" class="flex flex-col gap-2">
+        <p>Enter your new password</p>
+        <input id="email" v-model="email" type="hidden" name="email" />
+        <InputPassword v-model="password" label="New password" name="new-password" autocomplete="new-password" :rules="[required()]" />
+        <Button class="w-max" @click.prevent="sendNewPassword">Update password</Button>
+      </form>
+      <div v-else class="flex flex-col gap-2">
+        <p>Password updated!</p>
+        <Button class="w-max" @click="gotoLogin">Go to Login</Button>
+      </div>
+    </Card>
+  </main>
 </template>

@@ -140,97 +140,90 @@ async function finish(response: LoginResponse) {
   }
 }
 
+function providerLabel(provider: string) {
+  if (provider === "github") return "GitHub";
+  if (provider === "google") return "Google";
+  if (provider === "microsoft") return "Microsoft";
+  return provider;
+}
+
 useSeo(computed(() => ({ title: "Login", route })));
 </script>
 
 <template>
-  <Card class="w-xl mx-auto max-w-full">
-    <template #header>{{ dialogTitle }}</template>
+  <main class="flex min-h-[70vh] w-full items-center justify-center px-4 py-10">
+    <Card class="w-full max-w-xl">
+      <div class="mb-5">
+        <h1 class="text-2xl font-bold">{{ dialogTitle }}</h1>
+        <p v-if="!!dialogInfo" class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{{ dialogInfo }}</p>
+      </div>
 
-    <div v-if="!!dialogInfo" class="mb-2">{{ dialogInfo }}</div>
+      <form v-if="supportedMethods.length === 0" class="flex flex-col gap-3">
+        <InputText
+          v-model="username"
+          label="Username"
+          name="username"
+          autocomplete="username"
+          :rules="[required()]"
+          :class="{ 'hidden!': privileged }"
+          :disabled="privileged"
+        />
+        <InputPassword v-model="password" label="Password" name="password" autocomplete="current-password" :rules="[required()]" />
+        <Button size="medium" class="mt-1 h-10.5 w-full" :loading="loading" @click.prevent="loginPassword">Log in</Button>
 
-    <form v-if="supportedMethods.length === 0" class="flex flex-col gap-2">
-      <InputText
-        v-model="username"
-        label="Username"
-        name="username"
-        autocomplete="username"
-        :rules="[required()]"
-        :class="{ 'hidden!': privileged }"
-        :disabled="privileged"
-      />
-      <InputPassword v-model="password" label="Password" name="password" autocomplete="current-password" :rules="[required()]" />
-      <div class="flex flex-col gap-2">
-        <Button :disabled="loading" @click.prevent="loginPassword">Log in</Button>
         <template v-if="!privileged">
-          <div class="flex items-center space-x-2">
+          <div v-if="backendData.security.oauthProviders.length > 0" class="my-2 flex items-center gap-3">
             <hr class="flex-grow border-zinc-200 dark:border-zinc-700" />
-            <span class="text-zinc-400 dark:text-zinc-300 text-sm">OR</span>
+            <span class="text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-300">or</span>
             <hr class="flex-grow border-zinc-200 dark:border-zinc-700" />
           </div>
-          <div class="flex flex-row justify-center gap-x-4">
+          <div v-if="backendData.security.oauthProviders.length > 0" class="grid gap-2 sm:grid-cols-3">
             <Button
               v-for="provider in backendData.security.oauthProviders"
               :key="provider"
+              button-type="borderless"
+              size="medium"
+              class="h-10.5 !border-gray-300 dark:!border-gray-700"
               :disabled="loading"
               :href="'/api/internal/oauth/' + provider + '/login?mode=login&returnUrl=' + returnUrl"
             >
-              <template v-if="provider === 'github'">
-                <div class="flex flex-row gap-x-0.5 items-center">
-                  <IconMdiGithub class="mr-1" />
-                  GitHub
-                </div>
-              </template>
-              <template v-if="provider === 'google'">
-                <div class="flex flex-row gap-x-0.5 items-center">
-                  <IconMdiGoogle class="mr-1" />
-                  Google
-                </div>
-              </template>
-              <template v-if="provider === 'microsoft'">
-                <div class="flex flex-row gap-x-0.5 items-center">
-                  <IconMdiMicrosoft class="mr-1" />
-                  Microsoft
-                </div>
-              </template>
+              <span class="flex items-center gap-2">
+                <IconMdiGithub v-if="provider === 'github'" />
+                <IconMdiGoogle v-else-if="provider === 'google'" />
+                <IconMdiMicrosoft v-else-if="provider === 'microsoft'" />
+                {{ providerLabel(provider) }}
+              </span>
             </Button>
           </div>
+
+          <div class="mt-1 flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <Link to="/auth/signup">Create an account</Link>
+            <Link to="/auth/reset">Forgot your password?</Link>
+          </div>
         </template>
-      </div>
+      </form>
 
-      <hr class="flex-grow border-zinc-200 dark:border-zinc-700 mt-1" />
-
-      <Link v-if="!privileged" button-type="secondary" to="/auth/signup" class="w-max">Don't have an account yet? Create one!</Link>
-      <Link v-if="!privileged" to="/auth/reset" class="w-max">Forgot your password?</Link>
-    </form>
-
-    <form v-if="supportedMethods.length > 0" class="flex flex-col gap-2">
-      <template v-if="supportedMethods.includes('WEBAUTHN')">
-        <Button class="w-max" :disabled="loading" @click.prevent="loginWebAuthN">Use WebAuthn</Button>
-      </template>
-      <template v-if="supportedMethods.includes('WEBAUTHN') && supportedMethods.includes('TOTP')">
-        <hr />
-      </template>
-      <template v-if="supportedMethods.includes('TOTP')">
-        <div class="flex flex-col gap-2">
+      <form v-if="supportedMethods.length > 0" class="flex flex-col gap-3">
+        <Button v-if="supportedMethods.includes('WEBAUTHN')" size="medium" class="h-10.5 w-full" :disabled="loading" @click.prevent="loginWebAuthN">
+          Use passkey
+        </Button>
+        <div v-if="supportedMethods.includes('TOTP')" class="flex flex-col gap-3">
           <InputText v-model="totpCode" label="TOTP code" inputmode="numeric" />
-          <Button class="w-max" :disabled="loading" @click.prevent="loginTotp">Use TOTP</Button>
+          <Button button-type="secondary" size="medium" class="h-10.5 w-full" :disabled="loading" @click.prevent="loginTotp">Use TOTP</Button>
         </div>
-      </template>
-      <template v-if="supportedMethods.includes('BACKUP_CODES')">
-        <Modal title="Recover account">
+        <Modal v-if="supportedMethods.includes('BACKUP_CODES')" title="Recover account">
           <template #activator="{ on }">
-            <Link v-on="on">Lost access?</Link>
+            <Button button-type="borderless" size="medium" class="w-max" v-on="on">Lost access?</Button>
           </template>
           <template #default>
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-3">
               <p>Enter one of your saved backup codes to login.</p>
               <InputText v-model="backupCode" label="Backup code" />
-              <Button class="w-max mt-2" :disabled="loading" @click.prevent="loginBackupCode">Use backup code</Button>
+              <Button class="w-max" :disabled="loading" @click.prevent="loginBackupCode">Use backup code</Button>
             </div>
           </template>
         </Modal>
-      </template>
-    </form>
-  </Card>
+      </form>
+    </Card>
+  </main>
 </template>

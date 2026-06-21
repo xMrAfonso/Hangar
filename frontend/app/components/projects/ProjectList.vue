@@ -9,6 +9,7 @@ const props = defineProps<{
   projects?: PaginatedResultProject;
   resetAnchor?: HTMLElement | null;
   loading?: boolean;
+  appendLoading?: boolean;
   canEdit?: boolean;
   pinned?: ProjectCompact[];
 }>();
@@ -56,9 +57,48 @@ watch(
         <ProjectCard :project="item" :can-edit="canEdit" :pinned="pinned?.some((p) => p.namespace.slug === item.namespace.slug)" />
       </Transition>
     </template>
+    <template #after-items>
+      <div v-if="appendLoading" class="flex justify-center py-3" aria-label="Loading projects">
+        <span class="loading-dot" />
+        <span class="loading-dot animation-delay-150" />
+        <span class="loading-dot animation-delay-300" />
+      </div>
+    </template>
   </Pagination>
   <div v-if="projects?.result?.length === 0">{{ i18n.t("hangar.projectSearch.noProjects") }}</div>
   <template v-if="showSkeletons">
     <Skeleton v-for="n in 10" :key="n" class="h-40 rounded-xl" />
   </template>
 </template>
+
+<style scoped>
+.loading-dot {
+  margin: 0 3px;
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background: var(--primary-400);
+  animation: loading-dot 0.9s infinite ease-in-out both;
+}
+
+.animation-delay-150 {
+  animation-delay: 0.15s;
+}
+
+.animation-delay-300 {
+  animation-delay: 0.3s;
+}
+
+@keyframes loading-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+</style>

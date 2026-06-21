@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { Step } from "#shared/types/components/design/Steps";
 import type { HangarChannel, HangarProject, PendingVersion, Platform, PlatformData } from "#shared/types/backend";
-import { guidelinesLastUpdated } from "~/pages/guidelines.vue";
+import { guidelinesLastUpdated } from "~/content/guidelines";
 
 definePageMeta({
   projectPermsRequired: ["CreateVersion"],
@@ -249,8 +249,8 @@ function addChannel(channel: HangarChannel) {
   selectedChannel.value = channel.name;
 }
 
-function selectChannel(channel: HangarChannel) {
-  selectedChannel.value = channel.name;
+function channelOption(option: string | Record<string, any>): HangarChannel {
+  return option as HangarChannel;
 }
 
 function togglePlatform(platformFile: PlatformFile, platform: Platform) {
@@ -279,7 +279,9 @@ useSeo(
   <div>
     <Transition>
       <div v-if="loading.create" class="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]/70 px-4">
-        <div class="background-default flex w-full max-w-sm flex-col items-center rounded-xl border border-gray-200 px-6 py-7 text-center shadow-xl dark:border-gray-800">
+        <div
+          class="background-default flex w-full max-w-sm flex-col items-center rounded-xl border border-gray-200 px-6 py-7 text-center shadow-xl dark:border-gray-800"
+        >
           <span class="inline-flex h-12 w-12 items-center justify-center text-2xl color-primary">
             <IconMdiLoading class="animate-spin" />
           </span>
@@ -296,34 +298,14 @@ useSeo(
             <div class="grid gap-2 sm:grid-cols-[minmax(0,24rem)_14rem] sm:items-end">
               <div>
                 <label class="mb-1 block text-sm font-semibold">{{ t("version.new.form.channel") }}</label>
-                <DropdownButton button-size="medium" button-type="transparent" button-class="!h-11 !py-2" match-width spread-arrow>
-                  <template #button-label>
-                    <span class="w-full truncate text-left">{{ selectedChannel }}</span>
+                <DropdownSelect v-model="selectedChannel" :values="channels || []" item-value="name" item-text="name" button-class="!h-11 !py-2">
+                  <template #option="{ option }">
+                    <span class="flex min-w-0 items-center gap-2">
+                      <span class="h-3 w-3 flex-shrink-0 rounded-full" :style="{ backgroundColor: channelOption(option).color }" />
+                      <span class="truncate">{{ channelOption(option).name }}</span>
+                    </span>
                   </template>
-                  <template #default="{ close }">
-                    <DropdownItem
-                      v-for="channel in channels || []"
-                      :key="channel.name"
-                      :style="
-                        selectedChannel === channel.name
-                          ? {
-                              backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
-                              borderColor: 'var(--primary-500)',
-                            }
-                          : {}
-                      "
-                      @click="
-                        selectChannel(channel);
-                        close();
-                      "
-                    >
-                      <span class="flex min-w-0 items-center gap-2">
-                        <span class="h-3 w-3 flex-shrink-0 rounded-full" :style="{ backgroundColor: channel.color }" />
-                        <span class="truncate">{{ channel.name }}</span>
-                      </span>
-                    </DropdownItem>
-                  </template>
-                </DropdownButton>
+                </DropdownSelect>
               </div>
               <ChannelModal v-if="project" :project-id="project.id" @create="addChannel as unknown as HangarChannel">
                 <template #activator="{ on }">
@@ -365,7 +347,9 @@ useSeo(
 
                 <div class="lg:flex lg:h-10 lg:items-center">
                   <span class="mb-1 block text-xs font-semibold text-gray lg:hidden">Source</span>
-                  <div class="background-default inline-flex h-10 flex-row items-center gap-1 overflow-hidden rounded-lg border border-gray-200 p-0.5 dark:border-gray-800">
+                  <div
+                    class="background-default inline-flex h-10 flex-row items-center gap-1 overflow-hidden rounded-lg border border-gray-200 p-0.5 dark:border-gray-800"
+                  >
                     <button
                       type="button"
                       class="inline-flex h-8 items-center justify-center rounded-md border px-2.5 text-xs font-semibold leading-normal transition-all duration-250 hover:bg-gray-200 hover:border-gray-300 dark:hover:bg-gray-800 dark:hover:border-gray-700"
@@ -427,13 +411,13 @@ useSeo(
                       </span>
                     </template>
                     <InputText
-                        v-else
-                        v-model.trim="platformFile.url"
-                        placeholder="External URL"
-                        name="url"
-                        :rules="artifactURLRules(platformFile)"
-                        class="w-full [&>label]:!h-10 [&>label]:!py-0"
-                      />
+                      v-else
+                      v-model.trim="platformFile.url"
+                      placeholder="External URL"
+                      name="url"
+                      :rules="artifactURLRules(platformFile)"
+                      class="w-full [&>label]:!h-10 [&>label]:!py-0"
+                    />
                   </div>
                 </div>
 
@@ -492,7 +476,7 @@ useSeo(
           </section>
 
           <Link
-            to="/guidelines"
+            to="/support/guidelines"
             class="group flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2.5 transition-colors hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800 dark:hover:border-gray-700 dark:hover:bg-gray-800"
           >
             <IconMdiFileDocumentOutline class="flex-shrink-0 text-lg text-gray" />
@@ -502,7 +486,7 @@ useSeo(
             </span>
             <IconMdiChevronRight class="flex-shrink-0 text-gray transition-transform group-hover:translate-x-0.5" />
           </Link>
-          </div>
+        </div>
       </template>
       <template #basic>
         <p class="mb-4">{{ i18n.t("version.new.form.versionDescription") }}</p>
@@ -554,7 +538,11 @@ useSeo(
             </div>
 
             <div class="flex flex-col gap-3">
-              <div v-for="platform in selectedPlatformsData" :key="platform.enumName" class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+              <div
+                v-for="platform in selectedPlatformsData"
+                :key="platform.enumName"
+                class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
+              >
                 <div class="flex items-center gap-2 border-b px-3 py-2.5 dark:border-gray-800">
                   <PlatformLogo :platform="platform.enumName" :size="22" class="flex-shrink-0" />
                   <span class="font-semibold">{{ platform.name }}</span>
@@ -571,7 +559,12 @@ useSeo(
                         placeholder="Search versions"
                       />
                     </div>
-                    <Button button-type="secondary" size="medium" class="flex-shrink-0" @click="platformVersionShowAll[platform.enumName] = !platformVersionShowAll[platform.enumName]">
+                    <Button
+                      button-type="secondary"
+                      size="medium"
+                      class="flex-shrink-0"
+                      @click="platformVersionShowAll[platform.enumName] = !platformVersionShowAll[platform.enumName]"
+                    >
                       {{ platformVersionShowAll[platform.enumName] ? "Group" : "Show patches" }}
                     </Button>
                   </div>
@@ -599,7 +592,11 @@ useSeo(
             </div>
 
             <div class="flex flex-col gap-3">
-              <div v-for="platform in selectedPlatformsData" :key="`${platform.enumName}-deps`" class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+              <div
+                v-for="platform in selectedPlatformsData"
+                :key="`${platform.enumName}-deps`"
+                class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800"
+              >
                 <div class="flex items-center gap-2 border-b px-3 py-2.5 dark:border-gray-800">
                   <PlatformLogo :platform="platform.enumName" :size="22" class="flex-shrink-0" />
                   <span class="font-semibold">{{ platform.name }}</span>

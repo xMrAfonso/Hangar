@@ -69,7 +69,7 @@ useSeo(computed(() => ({ title: i18n.t("userAdmin.title") + " " + route.params.u
 
         <div class="flex mt-2 items-center">
           <div class="flex-grow">
-            <InputSelect
+            <DropdownSelect
               v-model="selectedRole"
               :values="useBackendData.globalRoles.filter((r) => r.value !== 'Organization')"
               item-text="title"

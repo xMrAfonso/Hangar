@@ -68,23 +68,24 @@ async function editChannel(channel: HangarChannel | ProjectChannel) {
 <template>
   <div class="flex flex-col gap-4">
     <Card class="!p-0 overflow-hidden">
-      <div class="flex justify-end px-3 pt-3">
-        <ChannelModal v-if="project" :project-id="project.id" @create="addChannel">
-          <template #activator="{ on }">
-            <Button
-              v-if="channels && channels.length < validations.project.maxChannelCount"
-              size="small"
-              class="!h-8 !px-2 !py-1 text-sm"
-              :disabled="channels.length >= validations.project.maxChannelCount"
-              v-on="on"
-            >
-              <IconMdiPlus class="mr-1 text-base" />
-              {{ i18n.t("channel.manage.add") }}
-            </Button>
-          </template>
-        </ChannelModal>
-      </div>
-
+      <template #header>
+        <div class="flex min-h-12 items-center justify-end border-b border-gray-200 px-3 py-2 dark:border-gray-800">
+          <ChannelModal v-if="project" :project-id="project.id" @create="addChannel">
+            <template #activator="{ on }">
+              <Button
+                v-if="channels && channels.length < validations.project.maxChannelCount"
+                size="small"
+                class="!h-8 !px-2.5 !py-1 text-sm"
+                :disabled="channels.length >= validations.project.maxChannelCount"
+                v-on="on"
+              >
+                <IconMdiPlus class="mr-1 text-base" />
+                {{ i18n.t("channel.manage.add") }}
+              </Button>
+            </template>
+          </ChannelModal>
+        </div>
+      </template>
       <SortableTable v-if="channels" :headers="headers" :items="channels">
         <template #name="{ item }">
           <span class="inline-flex items-center gap-2 font-semibold">

@@ -19,12 +19,14 @@ const props = defineProps<{
   project?: HangarProject;
   user?: HangarUser;
 }>();
+type PageTableRow = HangarProject["pages"][number] & { depth: number };
 
 const selectedTab = ref(route.params.slug?.[0] || "general");
 const tabs = ref([
   { value: "general", header: i18n.t("project.settings.tabs.general") },
   { value: "links", header: i18n.t("project.settings.tabs.links") },
   { value: "banners", header: i18n.t("project.settings.tabs.banners") },
+  { value: "pages", header: "Pages" },
   { value: "members", header: "Members" },
   // { value: "donation", header: i18n.t("project.settings.tabs.donation") },
 ] satisfies Tab<string>[]);
@@ -38,6 +40,7 @@ const form = reactive({
   description: undefined,
   category: undefined,
 } as { settings?: ProjectSettings; description?: string; category?: Category });
+const updateProjectPages = inject<(pages: HangarProject["pages"]) => void>("updateProjectPages");
 
 watch(
   () => props.project,
@@ -69,18 +72,43 @@ const loading = reactive({
 
 const isCustomLicense = computed(() => form.settings?.license?.type === "Other");
 const isUnspecifiedLicense = computed(() => form.settings?.license?.type === "Unspecified");
-const selectedCategory = computed(() => useCategoryOptions.value.find((option) => option.value === form.category));
-
-function selectCategory(value: string) {
-  form.category = value as Category;
-}
-
-function selectLicense(value: string) {
-  if (form.settings) form.settings.license.type = value;
-}
-
 watch(route, (val) => (selectedTab.value = val.params.slug?.[0] || "general"), { deep: true });
 watch(selectedTab, (val) => router.replace("/" + route.params.user + "/" + route.params.project + "/settings/" + val));
+
+function tabUrl(tab: string): string {
+  return `/${route.params.user}/${route.params.project}/settings/${tab}`;
+}
+
+function pageUrl(page: HangarProject["pages"][number]): string {
+  if (page.home) {
+    return `/${route.params.user}/${route.params.project}`;
+  }
+  return `/${route.params.user}/${route.params.project}/pages/${page.slug}`;
+}
+
+function pageSlugs(pages: HangarProject["pages"]): string[] {
+  return pages.flatMap((page) => [page.slug, ...pageSlugs(page.children)]);
+}
+
+function flattenPageRows(pages: HangarProject["pages"] = [], depth = 0): PageTableRow[] {
+  return pages.flatMap((page) => [{ ...page, depth }, ...flattenPageRows(page.children, depth + 1)]);
+}
+
+const projectPages = computed(() => props.project?.pages ?? []);
+const openProjectPages = computed(() => pageSlugs(projectPages.value));
+const pageRows = computed(() => flattenPageRows(projectPages.value));
+
+async function deleteCustomPage(page: HangarProject["pages"][number]) {
+  try {
+    await useInternalApi(`pages/delete/${props.project?.id}/${page.id}`, "post");
+    if (props.project?.id && updateProjectPages) {
+      updateProjectPages(await useInternalApi<HangarProject["pages"]>(`pages/list/${props.project.id}`, "get"));
+    }
+    notificationStore.success(i18n.t("general.delete"));
+  } catch (err) {
+    handleRequestError(err, "page.new.error.save");
+  }
+}
 
 const search = ref<string>("");
 const result = ref<string[]>([]);
@@ -186,6 +214,20 @@ async function resetIcon() {
 
 const shieldIoStyle = ref("flat");
 const mcBannersStyle = ref("DARK_GUNMETAL");
+const mcBannerStyles = [
+  "BLUE_RADIAL",
+  "BURNING_ORANGE",
+  "MANGO",
+  "MOONLIGHT_PURPLE",
+  "ORANGE_RADIAL",
+  "VELVET",
+  "YELLOW",
+  "MALACHITE_GREEN",
+  "DARK_GUNMETAL",
+  "PURPLE_TAUPE",
+  "LIGHT_MODE",
+];
+const shieldIoStyles = ["flat", "flat-square", "plastic", "for-the-badge", "social"];
 const mcBannerErrors = reactive({
   author: false,
   resource: false,
@@ -223,9 +265,29 @@ useSeo(
 </script>
 
 <template>
-  <div>
+  <div class="grid grid-cols-1 items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
+    <aside class="min-w-0 lg:sticky lg:top-4">
+      <nav aria-label="Project settings" class="flex gap-2 overflow-x-auto border-b border-gray-200 pb-2 dark:border-gray-800 lg:flex-col lg:overflow-visible lg:border-b-0 lg:border-r lg:pr-3 lg:pb-0">
+        <NuxtLink
+          v-for="tab in tabs"
+          :key="tab.value"
+          :to="tabUrl(tab.value)"
+          class="inline-flex h-10 min-w-max items-center rounded-lg border px-3 text-sm font-semibold transition-colors hover:border-gray-300 hover:bg-gray-100 dark:hover:border-gray-700 dark:hover:bg-gray-800 lg:min-w-0 lg:justify-start"
+          :class="selectedTab === tab.value ? 'border-primary-500 color-primary' : 'border-transparent text-gray-700 dark:text-gray-300'"
+          :style="
+            selectedTab === tab.value
+              ? {
+                  backgroundColor: 'color-mix(in srgb, var(--primary-500) 18%, transparent)',
+                  borderColor: 'var(--primary-500)',
+                }
+              : {}
+          "
+        >
+          <span class="truncate">{{ tab.header }}</span>
+        </NuxtLink>
+      </nav>
+    </aside>
     <section class="min-w-0">
-      <!-- setting icons -->
       <Tabs v-model="selectedTab" :tabs="tabs" hide-navigation>
         <template #general>
           <div class="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
@@ -234,31 +296,7 @@ useSeo(
                 <h2 class="text-xl font-bold">{{ i18n.t("project.settings.category") }}</h2>
                 <p class="mt-1 text-sm text-gray">{{ i18n.t("project.settings.categorySub") }}</p>
                 <div class="mt-3">
-                  <DropdownButton button-size="medium" button-type="transparent" button-class="!h-10.5 !py-2" match-width spread-arrow>
-                    <template #button-label>
-                      <span class="w-full truncate text-left">{{ selectedCategory ? i18n.t(selectedCategory.text) : form.category }}</span>
-                    </template>
-                    <template #default="{ close }">
-                      <DropdownItem
-                        v-for="category in useCategoryOptions"
-                        :key="category.value"
-                        :style="
-                          form.category === category.value
-                            ? {
-                                backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
-                                borderColor: 'var(--primary-500)',
-                              }
-                            : {}
-                        "
-                        @click="
-                          selectCategory(category.value);
-                          close();
-                        "
-                      >
-                        {{ i18n.t(category.text) }}
-                      </DropdownItem>
-                    </template>
-                  </DropdownButton>
+                  <DropdownSelect v-model="form.category" :values="useCategoryOptions" item-value="value" item-text="text" i18n-text-values />
                 </div>
               </div>
 
@@ -348,31 +386,7 @@ useSeo(
                 <p class="mt-1 text-sm text-gray">{{ i18n.t("project.settings.licenseSub") }}</p>
                 <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(10rem,1fr)_minmax(0,2fr)]">
                   <div>
-                    <DropdownButton v-if="form.settings" button-size="medium" button-type="transparent" button-class="!h-10.5 !py-2" match-width spread-arrow>
-                      <template #button-label>
-                        <span class="w-full truncate text-left">{{ form.settings.license.type }}</span>
-                      </template>
-                      <template #default="{ close }">
-                        <DropdownItem
-                          v-for="license in useLicenseOptions"
-                          :key="license.value"
-                          :style="
-                            form.settings?.license.type === license.value
-                              ? {
-                                  backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
-                                  borderColor: 'var(--primary-500)',
-                                }
-                              : {}
-                          "
-                          @click="
-                            selectLicense(license.value);
-                            close();
-                          "
-                        >
-                          {{ license.text }}
-                        </DropdownItem>
-                      </template>
-                    </DropdownButton>
+                    <DropdownSelect v-if="form.settings" v-model="form.settings.license.type" :values="useLicenseOptions" item-value="value" item-text="text" />
                   </div>
                   <div v-if="isCustomLicense">
                     <InputText
@@ -445,6 +459,69 @@ useSeo(
                 {{ i18n.t("general.save") }}
               </Button>
             </div>
+          </Card>
+        </template>
+        <template #pages>
+          <Card class="!p-0 overflow-hidden">
+            <template #header>
+              <div class="flex min-h-16 items-center gap-3 px-4 py-3">
+                <div class="min-w-0 flex-grow">
+                  <h2 class="text-xl font-bold">Pages</h2>
+                  <p class="mt-0.5 text-sm font-normal text-gray">Manage the page tree shown on this project.</p>
+                </div>
+                <NewPageModal v-if="project" :pages="project.pages" :project-id="project.id" button-type="borderless" class="!h-9 !w-9 !p-0" />
+              </div>
+            </template>
+
+            <Table
+              v-if="pageRows.length > 0"
+              class="[&_td]:align-middle [&_th]:align-middle [&_thead]:!bg-transparent [&_thead]:border-y [&_thead]:border-gray-200 [&_thead]:dark:border-gray-800"
+            >
+              <thead class="text-xs font-semibold uppercase text-gray">
+                <tr>
+                  <th>Name</th>
+                  <th class="w-32">Type</th>
+                  <th class="w-28 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="page in pageRows" :key="page.id">
+                  <td>
+                    <NuxtLink
+                      :to="pageUrl(page)"
+                      class="group flex min-w-0 items-center gap-2 rounded-md py-1 font-semibold text-current decoration-none transition-colors hover:color-primary hover:no-underline"
+                      :style="{ marginLeft: `${page.depth * 0.875}rem` }"
+                    >
+                      <span
+                        v-if="page.depth > 0"
+                        class="h-2.5 w-2.5 flex-shrink-0 rounded-bl-md border-b border-l border-gray-300 transition-colors group-hover:border-primary-500 dark:border-gray-700"
+                      />
+                      <span class="truncate">{{ page.name }}</span>
+                    </NuxtLink>
+                  </td>
+                  <td>
+                    <span class="inline-flex rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray dark:bg-charcoal-500">
+                      {{ page.home ? "Home" : "Custom" }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="flex justify-end gap-1 pr-1">
+                      <Button :to="pageUrl(page)" button-type="borderless" class="!h-8 !w-8 !p-0" :aria-label="page.home ? 'Open page' : 'Edit page'">
+                        <IconMdiPencil />
+                      </Button>
+                      <DeletePageModal v-if="!page.home" @delete="deleteCustomPage(page)">
+                        <template #activator="{ on }">
+                          <Button button-type="borderless" class="!h-8 !w-8 !p-0 hover:!border-red-600 hover:!bg-red-900/50" aria-label="Delete page" v-on="on">
+                            <IconMdiDeleteOutline />
+                          </Button>
+                        </template>
+                      </DeletePageModal>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </Table>
+            <div v-else class="px-4 py-8 text-center text-sm text-gray">No custom pages have been added yet.</div>
           </Card>
         </template>
         <template #management>
@@ -563,35 +640,7 @@ useSeo(
           <div class="grid gap-3 sm:grid-cols-2 items-start">
             <ProjectSettingsSection title="project.settings.banners.mcbanners" description="project.settings.banners.mcbannersSub">
               <div class="mb-2">
-                <DropdownButton button-size="medium" button-type="transparent" button-class="!h-10.5 !py-2" match-width spread-arrow>
-                  <template #button-label>
-                    <span class="w-full truncate text-left">{{ mcBannersStyle }}</span>
-                  </template>
-                  <template #default="{ close }">
-                    <DropdownItem
-                      v-for="style in [
-                        'BLUE_RADIAL',
-                        'BURNING_ORANGE',
-                        'MANGO',
-                        'MOONLIGHT_PURPLE',
-                        'ORANGE_RADIAL',
-                        'VELVET',
-                        'YELLOW',
-                        'MALACHITE_GREEN',
-                        'DARK_GUNMETAL',
-                        'PURPLE_TAUPE',
-                        'LIGHT_MODE',
-                      ]"
-                      :key="style"
-                      @click="
-                        mcBannersStyle = style;
-                        close();
-                      "
-                    >
-                      {{ style }}
-                    </DropdownItem>
-                  </template>
-                </DropdownButton>
+                <DropdownSelect v-model="mcBannersStyle" :values="mcBannerStyles" />
               </div>
               <div class="grid gap-3 sm:grid-cols-2">
                 <div>
@@ -640,23 +689,7 @@ useSeo(
             </ProjectSettingsSection>
             <ProjectSettingsSection title="project.settings.banners.shields" description="project.settings.banners.shieldsSub">
               <div class="mb-2">
-                <DropdownButton button-size="medium" button-type="transparent" button-class="!h-10.5 !py-2" match-width spread-arrow>
-                  <template #button-label>
-                    <span class="w-full truncate text-left">{{ shieldIoStyle }}</span>
-                  </template>
-                  <template #default="{ close }">
-                    <DropdownItem
-                      v-for="style in ['flat', 'flat-square', 'plastic', 'for-the-badge', 'social']"
-                      :key="style"
-                      @click="
-                        shieldIoStyle = style;
-                        close();
-                      "
-                    >
-                      {{ style }}
-                    </DropdownItem>
-                  </template>
-                </DropdownButton>
+                <DropdownSelect v-model="shieldIoStyle" :values="shieldIoStyles" />
               </div>
               <div class="grid gap-3 sm:grid-cols-3 items-start">
                 <div

@@ -52,7 +52,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     from,
     (versionName) => {
       if ("project" in to.params) {
-        return useApi<Version>(`projects/${to.params.project}/versions/${versionName}?resolveId=false"`);
+        return useApi<Version>(`projects/${to.params.project}/versions/${versionName}?resolveId=false`);
       }
       throw createError({ statusCode: 500, statusMessage: "No project param?!" });
     },
@@ -73,7 +73,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     promises
   ) as string[] | undefined;
 
-  if (import.meta.server && promises?.length) {
+  if (promises?.length) {
     try {
       await Promise.all(promises);
     } catch (err) {

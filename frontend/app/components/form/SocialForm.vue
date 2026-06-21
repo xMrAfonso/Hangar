@@ -17,8 +17,6 @@ const linkTypes = [
   { value: "website", text: "Website" },
 ];
 
-const selectedLinkType = computed(() => linkTypes.find((type) => type.value === linkType.value));
-
 function addLink() {
   if (!linkType.value) {
     return notification.error("You have to select a type");
@@ -67,34 +65,14 @@ function removeLink(type: string) {
   </div>
 
   <div class="mt-3 flex flex-wrap items-center gap-2">
-    <DropdownButton button-size="medium" button-type="transparent" match-width spread-arrow>
+    <DropdownSelect v-model="linkType" :values="linkTypes" item-value="value" item-text="text">
       <template #button-label>
         <div class="flex w-36 items-center justify-start gap-2">
           <IconMdiLinkVariant />
-          <span class="truncate">{{ selectedLinkType?.text || "Link type" }}</span>
+          <span class="truncate">{{ linkTypes.find((type) => type.value === linkType)?.text || "Link type" }}</span>
         </div>
       </template>
-      <template #default="{ close }">
-        <DropdownItem
-          v-for="type in linkTypes"
-          :key="type.value"
-          :style="
-            linkType === type.value
-              ? {
-                  backgroundColor: 'color-mix(in srgb, var(--primary-500) 25%, transparent)',
-                  borderColor: 'var(--primary-500)',
-                }
-              : {}
-          "
-          @click="
-            linkType = type.value;
-            close();
-          "
-        >
-          {{ type.text }}
-        </DropdownItem>
-      </template>
-    </DropdownButton>
+    </DropdownSelect>
     <Button button-type="secondary" size="medium" @click.prevent="addLink">
       <IconMdiPlus class="mr-1" />
       Add link

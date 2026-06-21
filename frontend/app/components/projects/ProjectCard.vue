@@ -36,22 +36,29 @@ function openAction(path: string) {
 </script>
 
 <template>
-  <NuxtLink :to="'/' + project.namespace.owner + '/' + project.namespace.slug" class="block transition-transform duration-200">
+  <NuxtLink :to="'/' + project.namespace.owner + '/' + project.namespace.slug" class="block transition-transform duration-200 hover:scale-[1.01]">
     <Card
-      class="relative"
+      class="project-card relative overflow-hidden bg-clip-padding"
       :class="{
         '!border-red-500 border-1px': project.visibility === Visibility.SoftDelete,
         '!border-gray-300 !dark:border-gray-800 border-1px': project.visibility === Visibility.Public,
-        'hover:background-card group': true,
+        group: true,
         'transition-all duration-200': true,
       }"
     >
       <div class="flex space-x-4">
         <div class="relative flex-shrink-0 overflow-hidden rounded-lg">
-          <UserAvatar class="lt-xl:w-100px lt-xl:h-100px h-125px w-125px" :username="project.namespace.owner" :img-src="project.avatarUrl" disable-link />
+          <UserAvatar
+            class="lt-xl:w-100px lt-xl:h-100px h-125px w-125px"
+            :username="project.namespace.owner"
+            :img-src="project.avatarUrl"
+            disable-link
+            decorative
+          />
           <div
             v-if="showActions"
-            class="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-1 bg-black/55 p-2 opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:opacity-100 focus-within:opacity-100"
+            class="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-1 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 focus-within:opacity-100"
+            style="background-color: rgb(0 0 0 / 24%)"
           >
             <Button
               v-if="canEdit"
@@ -165,8 +172,8 @@ function openAction(path: string) {
         </div>
         <div class="flex-grow" />
       </div>
-      <div class="xl:hidden flex items-center lt-sm:flex-col lt-sm:gap-2 justify-between w-full">
-        <div class="xl:hiddenspace-x-1 mt-3 -mb-1">
+      <div class="sm:hidden flex items-center flex-col gap-2 justify-between w-full">
+        <div class="space-x-1 mt-3 -mb-1">
           <span class="inline-flex items-center"><IconMdiCalendar class="mx-1 text-primary-300" />{{ lastUpdated(project.lastUpdated) }}</span>
           <span class="inline-flex items-center"><IconMdiStar class="mx-1 text-primary-300" /> {{ project.stats.stars }}</span>
           <span class="inline-flex items-center"><IconMdiDownload class="mx-1 text-primary-300" />{{ project.stats.downloads }}</span>
@@ -175,3 +182,26 @@ function openAction(path: string) {
     </Card>
   </NuxtLink>
 </template>
+
+<style scoped>
+.project-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 2px;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(30deg, transparent 40%, var(--primary-500) 250%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.project-card:hover::before {
+  opacity: 1;
+}
+
+.project-card > :deep(*) {
+  position: relative;
+  z-index: 1;
+}
+</style>

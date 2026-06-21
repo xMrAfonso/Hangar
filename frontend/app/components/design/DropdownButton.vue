@@ -15,6 +15,9 @@ const props = withDefaults(
     matchMenuWidth?: boolean;
     buttonClass?: string;
     spreadArrow?: boolean;
+    disabled?: boolean;
+    loading?: boolean;
+    container?: string | Element | false;
   }>(),
   {
     name: "Dropdown",
@@ -27,18 +30,23 @@ const props = withDefaults(
     matchMenuWidth: false,
     buttonClass: "",
     spreadArrow: false,
+    disabled: false,
+    loading: false,
+    container: "body",
   }
 );
 </script>
 
 <template>
-  <Popper :placement="placement" :auto-size="props.matchWidth || props.matchMenuWidth" :class="{ '!w-full': props.matchWidth }">
+  <Popper :placement="placement" :auto-size="props.matchWidth || props.matchMenuWidth" :container="container" :class="{ '!w-full': props.matchWidth }">
     <template #default="{ shown }">
       <Button
         class="h-10.5"
         :class="[props.buttonClass, { 'min-w-50': props.isSortBy, '!w-full !justify-between': props.matchWidth }]"
         :button-type="props.buttonType"
         :size="props.buttonSize"
+        :disabled="props.disabled"
+        :loading="props.loading"
         @click="$emit('click', $event)"
       >
         <span class="inline-flex items-center justify-center" :class="{ 'flex-1': props.spreadArrow }">

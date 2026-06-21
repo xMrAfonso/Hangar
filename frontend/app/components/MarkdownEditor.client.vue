@@ -139,7 +139,7 @@ function stopEditing() {
     <slot name="title" />
     <div
       v-if="internalEditing && showEditorActions"
-      class="flex items-center justify-end gap-2"
+      class="editor-actions flex items-center justify-end gap-2"
       :class="hasSlotContent($slots.title) ? 'absolute top-2 right-2 z-2' : 'px-2 py-2'"
     >
       <DeletePageModal @delete="deletePage">
@@ -156,7 +156,7 @@ function stopEditing() {
         <IconMdiClose />
       </Button>
     </div>
-    <div v-else class="absolute top-2 right-2 z-2">
+    <div v-else-if="!internalEditing" class="absolute top-2 right-2 z-2">
       <Button button-type="secondary" class="!h-9 !w-9 !p-0" aria-label="Edit content" @click="startEditing()">
         <IconMdiPencil />
       </Button>
@@ -313,6 +313,20 @@ function stopEditing() {
     .cm-header-6 {
       line-height: 1.25;
     }
+  }
+}
+
+.project-page-editor {
+  padding: 0.75rem 0.875rem 1rem;
+
+  > .editor-actions {
+    padding: 0 0 0.5rem !important;
+  }
+
+  .editor-statusbar {
+    border: 0;
+    background: transparent;
+    padding: 0.35rem 0.25rem 0;
   }
 }
 </style>

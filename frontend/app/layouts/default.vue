@@ -20,6 +20,7 @@ function fixCrowdin() {
         <slot />
       </div>
     </Container>
+    <LinkoutModal />
     <Notifications />
     <Footer />
     <button v-if="i18n.locale.value === 'dum'" class="crowdin-fix" aria-hidden="true" @click="fixCrowdin">✖</button>

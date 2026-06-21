@@ -158,12 +158,12 @@ const hasResults = computed(() => {
               <div class="h-full overflow-y-auto mb-2">
                 <!-- No Results / Start Typing Messages -->
                 <div v-if="query.length === 0" class="h-full flex items-center justify-center text-lg text-center text-gray-500 dark:text-gray-400">
-                  {{ i18n.t("hangar.globalSearch.startTyping") }}
+                  Start typing to search...
                 </div>
 
                 <!-- No Results Message -->
                 <div v-else-if="!hasResults" class="h-full flex items-center justify-center text-lg text-center text-gray-500 dark:text-gray-400">
-                  {{ i18n.t("hangar.globalSearch.noResults") }}
+                  "Sorry but couldn't find any results \uD83D\uDE22"
                 </div>
 
                 <!-- Results Sections -->
@@ -171,7 +171,7 @@ const hasResults = computed(() => {
                   <!-- Projects Section -->
                   <div v-if="displayedProjects && displayedProjects.result.length > 0" class="mx-3.5">
                     <h1 class="mb-2 mt-4 font-bold text-xl">
-                      {{ i18n.t("hangar.globalSearch.projects") }}
+                      Projects
                     </h1>
                     <button
                       v-for="project in displayedProjects.result"
@@ -194,7 +194,7 @@ const hasResults = computed(() => {
                   <!-- Users Section -->
                   <div v-if="displayedUsers && displayedUsers.result.length > 0" class="mx-3.5">
                     <h1 class="mb-2 mt-4 font-bold text-xl">
-                      {{ i18n.t("hangar.globalSearch.users") }}
+                      Users
                     </h1>
                     <button
                       v-for="user in displayedUsers.result"

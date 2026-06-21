@@ -20,6 +20,7 @@ const reported = computed(() => props.project?.userActions?.flagged);
 
 const isLoggedIn = computed(() => authStore.authenticated && !!authStore.user);
 const isOwn = computed(() => authStore.user?.name === props.project?.namespace?.owner);
+const loginRequiredLabel = "You must be logged in for this";
 
 const starredChanged = ref(false);
 const watchingChanged = ref(false);
@@ -120,7 +121,7 @@ function requiresConfirmation(): ConfirmationType {
     <Alert v-else-if="project.visibility === Visibility.SoftDelete" type="danger">
       {{ i18n.t("visibility.notice." + project.visibility, [project.lastVisibilityChangeUserName]) }}
     </Alert>
-    <div v-else class="flex items-start gap-2 rounded-xl border border-[#ff544b] bg-[#ff544b60] px-4 py-2 text-sm">
+    <div v-else class="flex items-start gap-2 rounded-xl border border-[#ff544b] bg-[#ff544b60] px-4 py-2.5 text-sm">
       <IconMdiAlertOutline class="mt-0.5 flex-shrink-0" />
       <div>
         <p>{{ i18n.t("visibility.notice." + project.visibility) }}</p>
@@ -134,7 +135,7 @@ function requiresConfirmation(): ConfirmationType {
         class="flex-shrink-0 lt-sm:hidden shadow-lg"
         :loading="!project"
         :username="project?.namespace?.owner"
-        :to="'/' + project?.namespace?.owner + '/' + project?.name"
+        disable-link
         :img-src="project?.avatarUrl"
         size="xl"
       />
@@ -144,15 +145,13 @@ function requiresConfirmation(): ConfirmationType {
             class="!w-14 !h-14 sm:hidden shadow-lg"
             :loading="!project"
             :username="project?.namespace?.owner"
-            :to="'/' + project?.namespace?.owner + '/' + project?.name"
+            disable-link
             :img-src="project?.avatarUrl"
           />
           <template v-if="project">
             <div class="min-w-0">
               <div class="flex flex-wrap items-baseline gap-x-3">
-                <NuxtLink :to="'/' + project.namespace.owner + '/' + project.name">
-                  <h1 class="truncate text-2xl sm:text-3xl font-bold">{{ project.name }}</h1>
-                </NuxtLink>
+                <h1 class="truncate text-2xl sm:text-3xl font-bold">{{ project.name }}</h1>
                 <span class="text-sm text-gray">
                   by
                   <NuxtLink class="color-primary hover:underline" :to="'/' + project.namespace.owner">
@@ -180,7 +179,7 @@ function requiresConfirmation(): ConfirmationType {
       </div>
       <div class="flex flex-col items-end justify-between gap-5 flex-shrink-0 lt-sm:items-stretch">
         <span v-if="project?.mainChannelVersions" class="inline-flex items-center">
-          <Tooltip v-if="requiresConfirmation() !== ConfirmationType.NO">
+          <Tooltip v-if="requiresConfirmation() !== ConfirmationType.NO" click>
             <template #content>
               {{ i18n.t(requiresConfirmation()) }}
             </template>
@@ -194,7 +193,7 @@ function requiresConfirmation(): ConfirmationType {
         <div class="flex justify-end">
           <Tooltip>
             <template #content>
-              <span v-if="!isLoggedIn">{{ i18n.t("general.error.401") }}</span>
+              <span v-if="!isLoggedIn">{{ loginRequiredLabel }}</span>
               <span v-else-if="isOwn">{{ i18n.t("project.info.stars", 0) }}</span>
               <span v-else-if="hasStarred()">{{ i18n.t("project.actions.unstar") }}</span>
               <span v-else>{{ i18n.t("project.actions.star") }}</span>
@@ -209,7 +208,7 @@ function requiresConfirmation(): ConfirmationType {
           <div class="px-1" />
           <Tooltip>
             <template #content>
-              <span v-if="!isLoggedIn">{{ i18n.t("general.error.401") }}</span>
+              <span v-if="!isLoggedIn">{{ loginRequiredLabel }}</span>
               <span v-else-if="isOwn">{{ i18n.t("project.info.watchers", 0) }}</span>
               <span v-else-if="isWatching()">{{ i18n.t("project.actions.unwatch") }}</span>
               <span v-else>{{ i18n.t("project.actions.watch") }}</span>

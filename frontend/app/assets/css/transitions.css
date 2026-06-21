@@ -9,6 +9,8 @@
   .page-enter-from,
   .page-leave-to {
     position: absolute;
+    right: 0;
+    left: 0;
     z-index: -1;
     opacity: 0;
     transform: translateY(1rem);
@@ -24,11 +26,15 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .collapse-enter-active {
-    transition: max-height 0.5s ease, opacity 0.5s ease;
+    transition:
+      max-height 0.5s ease,
+      opacity 0.5s ease;
   }
 
   .collapse-leave-active {
-    transition: max-height 0.3s ease, opacity 0.3s ease;
+    transition:
+      max-height 0.3s ease,
+      opacity 0.3s ease;
   }
 
   .collapse-enter-from,

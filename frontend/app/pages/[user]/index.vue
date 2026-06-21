@@ -342,15 +342,16 @@ useSeo(
 
           <ul
             v-else-if="starred?.result?.length"
-            class="max-h-[13.5rem] divide-y divide-gray-200 overflow-y-auto border-t border-gray-200 dark:divide-gray-800 dark:border-gray-800"
+            class="max-h-[13.5rem] divide-y divide-gray-200 overflow-y-auto overscroll-contain border-t border-gray-200 dark:divide-gray-800 dark:border-gray-800"
+            @wheel.stop
           >
             <li v-for="star in starred.result" :key="star.name" class="min-w-0">
-              <Link
+              <NuxtLink
                 :to="'/' + star.namespace.owner + '/' + star.namespace.slug"
-                class="block h-9 min-w-0 truncate px-3 py-2 text-sm transition-colors hover:background-card"
+                class="group block h-9 min-w-0 truncate px-3 py-2 text-sm text-current no-underline transition-colors hover:color-primary hover:no-underline"
               >
-                <span class="text-gray">{{ star.namespace.owner }}/</span><strong>{{ star.name }}</strong>
-              </Link>
+                <span class="text-gray transition-colors group-hover:color-primary">{{ star.namespace.owner }}/</span><strong class="text-gray-900 transition-colors group-hover:color-primary dark:text-white">{{ star.name }}</strong>
+              </NuxtLink>
             </li>
           </ul>
 
@@ -371,15 +372,16 @@ useSeo(
 
           <ul
             v-else-if="watching?.result?.length"
-            class="max-h-[13.5rem] divide-y divide-gray-200 overflow-y-auto border-t border-gray-200 dark:divide-gray-800 dark:border-gray-800"
+            class="max-h-[13.5rem] divide-y divide-gray-200 overflow-y-auto overscroll-contain border-t border-gray-200 dark:divide-gray-800 dark:border-gray-800"
+            @wheel.stop
           >
             <li v-for="watched in watching.result" :key="watched.name" class="min-w-0">
-              <Link
+              <NuxtLink
                 :to="'/' + watched.namespace.owner + '/' + watched.namespace.slug"
-                class="block h-9 min-w-0 truncate px-3 py-2 text-sm transition-colors hover:background-card"
+                class="group block h-9 min-w-0 truncate px-3 py-2 text-sm text-current no-underline transition-colors hover:color-primary hover:no-underline"
               >
-                <span class="text-gray">{{ watched.namespace.owner }}/</span><strong>{{ watched.name }}</strong>
-              </Link>
+                <span class="text-gray transition-colors group-hover:color-primary">{{ watched.namespace.owner }}/</span><strong class="text-gray-900 transition-colors group-hover:color-primary dark:text-white">{{ watched.name }}</strong>
+              </NuxtLink>
             </li>
           </ul>
 
