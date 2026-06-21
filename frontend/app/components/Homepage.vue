@@ -561,33 +561,6 @@ onMounted(() => {
         </CollapsibleCard>
       </div>
     </div>
-    <h2 class="text-2xl text-center font-bold mt-8">Frequently asked Questions about Hangar (FAQ)</h2>
-    <div class="md:(ml-15 mr-15)">
-      <Card class="mt-4" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-        <h3 class="text-lg font-bold mb-1" itemprop="name">What is Hangar?</h3>
-        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-          <div itemprop="text">
-            Hangar is the best place to download {{ platformName }} plugins. Created by the <Link href="https://papermc.io/team">PaperMC Team</Link>, we took
-            great care that you can find the newest and best {{ platformName }} plugins.
-          </div>
-        </div>
-      </Card>
-      <Card class="mt-4" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-        <h3 class="text-lg font-bold mb-1" itemprop="name">How do I download {{ platformName }} plugins from Hangar?</h3>
-        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-          <div itemprop="text">
-            To download {{ platformName }} plugins, simply use the search on this page to find the plugin you are looking for and download the
-            {{ platformName }} plugin from the resource page. The main download button will always provide the latest release version.
-          </div>
-        </div>
-      </Card>
-      <Card class="mt-4" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-        <h3 class="text-lg font-bold mb-1" itemprop="name">Can I automate uploading {{ platformName }} plugins to Hangar?</h3>
-        <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-          <div itemprop="text">Yes! Simply use the <Link href="https://github.com/HangarMC/hangar-publish-plugin">Hangar publish plugin for Gradle</Link>.</div>
-        </div>
-      </Card>
-    </div>
   </div>
 </template>
 

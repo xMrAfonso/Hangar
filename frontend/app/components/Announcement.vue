@@ -9,7 +9,7 @@ const { announcement } = toRefs(props);
   <!-- eslint-disable-next-line vue/no-v-html -->
   <div
     :style="'background-color:' + announcement.color + '60; border-color:' + announcement.color"
-    class="rounded-xl border px-4 py-2.5 text-center text-black dark:text-white"
+    class="rounded-lg border px-4 py-2.5 text-center text-black dark:text-white"
     v-html="useDomPurify(announcement.text)"
   />
 </template>

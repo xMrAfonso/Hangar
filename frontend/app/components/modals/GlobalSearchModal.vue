@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { onClickOutside, useEventListener } from "@vueuse/core";
 
-const i18n = useI18n();
 const router = useRouter();
 
 const query = ref("");

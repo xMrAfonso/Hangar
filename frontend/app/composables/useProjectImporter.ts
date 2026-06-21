@@ -20,18 +20,11 @@ export interface SpigotResource {
   current_version: string;
   version?: { id: string; name?: string };
   category: { title?: string; name?: string; id: string };
-  native_minecraft_version: string;
-  testedVersions?: string[];
-  supported_minecraft_versions: string[];
   icon_link: string;
   icon?: { url?: string; data?: string };
   premium: boolean | { price?: string };
   description: string;
   downloads?: number;
-  likes?: number;
-  rating?: { count?: number; average?: number };
-  updateDate?: number;
-  external_download_url?: string;
 }
 
 export function getSpigotResourceId(resource: SpigotResource) {
@@ -78,7 +71,7 @@ export async function getAllSpigotResourcesByAuthor(authorId: string) {
   return result;
 }
 
-export async function getSpigotResourcesByAuthor(authorId: string, page = 1) {
+async function getSpigotResourcesByAuthor(authorId: string, page = 1) {
   return doSpigotRequest<SpigotResource[]>({
     action: "getResourcesByAuthor",
     id: authorId,

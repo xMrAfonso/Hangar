@@ -58,10 +58,10 @@ function maybeLoadMore(event: Event) {
         </button>
       </div>
 
-      <div v-if="status === 'error' && !filteredUsers.length" class="rounded-xl border border-[#ff544b] bg-[#ff544b60] px-4 py-2.5 text-sm font-semibold">
+      <div v-if="status === 'error' && filteredUsers.length === 0" class="rounded-xl border border-[#ff544b] bg-[#ff544b60] px-4 py-2.5 text-sm font-semibold">
         This list couldn't be loaded.
       </div>
-      <ul v-else-if="filteredUsers.length" class="max-h-[min(26rem,60vh)] overflow-y-auto overscroll-contain pr-1" @scroll="maybeLoadMore" @wheel.stop>
+      <ul v-else-if="filteredUsers.length > 0" class="max-h-[min(26rem,60vh)] overflow-y-auto overscroll-contain pr-1" @scroll="maybeLoadMore" @wheel.stop>
         <li v-for="user in filteredUsers" :key="user.name">
           <NuxtLink
             :to="'/' + user.name"

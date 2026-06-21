@@ -38,7 +38,7 @@ defineSlots<{
       <span v-else-if="!hideToggle" class="w-7 flex-shrink-0" />
       <slot
         name="item"
-        :expanded="expanded[item[itemKey]]"
+        :expanded="expanded[item[itemKey]] ?? false"
         :has-children="'children' in item && item.children?.length > 0"
         :item="item"
         :toggle="() => (expanded[item[itemKey]] = !expanded[item[itemKey]])"

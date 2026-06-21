@@ -46,6 +46,10 @@ function flatDeep(pages: HangarProjectPage[], depth = 0): PageOption[] {
   return ps;
 }
 
+function optionDepth(option: string | Record<string, any>) {
+  return typeof option === "object" && option && "depth" in option ? Number(option.depth) || 0 : 0;
+}
+
 async function createPage() {
   try {
     loading.value = true;
@@ -104,12 +108,12 @@ async function createPage() {
             </span>
           </template>
           <template #option="{ option }">
-            <span class="flex min-w-0 items-center gap-2 text-sm" :style="{ paddingLeft: `${option.depth * 0.875}rem` }">
+            <span class="flex min-w-0 items-center gap-2 text-sm" :style="{ paddingLeft: `${optionDepth(option) * 0.875}rem` }">
                 <span
-                  v-if="option.depth > 0"
+                  v-if="optionDepth(option) > 0"
                   class="h-2.5 w-2.5 flex-shrink-0 rounded-bl-md border-b border-l border-gray-300 dark:border-gray-700"
                 />
-                <span class="truncate">{{ option.text }}</span>
+                <span class="truncate">{{ typeof option === "string" ? option : option.text }}</span>
               </span>
           </template>
         </DropdownSelect>

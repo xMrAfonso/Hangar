@@ -86,16 +86,11 @@ function pageUrl(page: HangarProject["pages"][number]): string {
   return `/${route.params.user}/${route.params.project}/pages/${page.slug}`;
 }
 
-function pageSlugs(pages: HangarProject["pages"]): string[] {
-  return pages.flatMap((page) => [page.slug, ...pageSlugs(page.children)]);
-}
-
 function flattenPageRows(pages: HangarProject["pages"] = [], depth = 0): PageTableRow[] {
   return pages.flatMap((page) => [{ ...page, depth }, ...flattenPageRows(page.children, depth + 1)]);
 }
 
 const projectPages = computed(() => props.project?.pages ?? []);
-const openProjectPages = computed(() => pageSlugs(projectPages.value));
 const pageRows = computed(() => flattenPageRows(projectPages.value));
 
 async function deleteCustomPage(page: HangarProject["pages"][number]) {
